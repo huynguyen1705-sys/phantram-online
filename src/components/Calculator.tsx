@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 
-type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest";
+type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound";
 
 interface HistoryItem {
   id: number;
@@ -19,7 +19,8 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "discount", label: "Giảm giá / Sale", icon: "🏷" },
   { id: "compare", label: "So sánh 2 giá", icon: "⚡" },
   { id: "tip", label: "Tip & Chia bill", icon: "🍽" },
-  { id: "interest", label: "Lãi suất", icon: "💰" },
+  { id: "interest", label: "Lãi suất đơn", icon: "💰" },
+  { id: "compound", label: "Lãi kép", icon: "📈" },
 ];
 
 function formatNum(n: number): string {
@@ -377,6 +378,118 @@ function BasicCalc() {
   );
 }
 
+function TabCompound() {
+  const [principal, setPrincipal] = useState("");
+  const [rate, setRate] = useState("");
+  const [period, setPeriod] = useState("");
+  const [periodUnit, setPeriodUnit] = useState<"month" | "year">("year");
+  const [compFreq, setCompFreq] = useState<"monthly" | "quarterly" | "yearly">("monthly");
+  const [copied, setCopied] = useState(false);
+
+  const p = parseFloat(principal);
+  const r = parseFloat(rate) / 100;
+  const t = parseFloat(period);
+
+  const freqMap = { monthly: 12, quarterly: 4, yearly: 1 };
+  const n = freqMap[compFreq];
+  // Lãi suất năm
+  const rYear = periodUnit === "month" ? r * 12 : r;
+  // Số năm
+  const tYear = periodUnit === "month" ? t / 12 : t;
+  // A = P(1 + r/n)^(n*t)
+  const amount = principal !== "" && rate !== "" && period !== "" && t > 0
+    ? p * Math.pow(1 + rYear / n, n * tYear)
+    : NaN;
+  const interest = !isNaN(amount) ? amount - p : NaN;
+
+  const result = isNaN(amount) ? "" : `${formatNum(amount)} ₫`;
+  const formula = result
+    ? `Lãi: ${formatNum(interest)} ₫ | Gốc: ${formatNum(p)} ₫ | Lãi/gốc: ${formatNum((interest/p)*100)}%`
+    : "";
+  const copy = () => { navigator.clipboard?.writeText(result); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+
+  // Bảng lãi theo từng năm
+  const yearRows: { year: number; amount: number; interest: number }[] = [];
+  if (!isNaN(amount) && tYear > 0 && tYear <= 50) {
+    const maxYear = Math.ceil(tYear);
+    for (let y = 1; y <= Math.min(maxYear, 10); y++) {
+      const a = p * Math.pow(1 + rYear / n, n * y);
+      yearRows.push({ year: y, amount: a, interest: a - p });
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm" style={{ color: "var(--text-muted)" }}>Tính lãi kép — A = P(1 + r/n)ⁿᵗ</p>
+      <NumInput label="Vốn gốc (₫)" value={principal} onChange={setPrincipal} placeholder="VD: 100000000" />
+      <NumInput label="Lãi suất (% / năm)" value={rate} onChange={setRate} placeholder="VD: 8" suffix="%" />
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>Kỳ hạn</label>
+        <div className="flex gap-2">
+          <input type="number" value={period} onChange={e => setPeriod(e.target.value)} placeholder="VD: 5" inputMode="decimal"
+            className="flex-1 rounded-xl border px-4 py-3 text-lg font-semibold outline-none focus:ring-2 focus:ring-blue-400"
+            style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }} />
+          <button onClick={() => setPeriodUnit("year")} className={`px-4 rounded-xl text-sm font-semibold transition-all ${periodUnit === "year" ? "tab-active" : ""}`} style={periodUnit === "year" ? {} : { background: "var(--border)", color: "var(--text)" }}>Năm</button>
+          <button onClick={() => setPeriodUnit("month")} className={`px-4 rounded-xl text-sm font-semibold transition-all ${periodUnit === "month" ? "tab-active" : ""}`} style={periodUnit === "month" ? {} : { background: "var(--border)", color: "var(--text)" }}>Tháng</button>
+        </div>
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>Tần suất ghép lãi</label>
+        <div className="flex gap-2">
+          {(["monthly", "quarterly", "yearly"] as const).map(f => {
+            const label = f === "monthly" ? "Hàng tháng" : f === "quarterly" ? "Hàng quý" : "Hàng năm";
+            return (
+              <button key={f} onClick={() => setCompFreq(f)} className={`flex-1 rounded-xl py-2 text-xs font-semibold transition-all ${compFreq === f ? "tab-active" : ""}`} style={compFreq === f ? {} : { background: "var(--border)", color: "var(--text)" }}>{label}</button>
+            );
+          })}
+        </div>
+      </div>
+      <ResultBox result={result} formula={formula} onCopy={copy} copied={copied} />
+      {!isNaN(amount) && (
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
+            <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Tổng nhận</p>
+            <p className="font-bold text-sm text-green-500">{formatNum(amount)} ₫</p>
+          </div>
+          <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
+            <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Tiền lãi</p>
+            <p className="font-bold text-sm" style={{ color: "var(--primary)" }}>{formatNum(interest)} ₫</p>
+          </div>
+          <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
+            <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Tăng trưởng</p>
+            <p className="font-bold text-sm text-orange-400">×{(amount/p).toFixed(2)}</p>
+          </div>
+        </div>
+      )}
+      {yearRows.length > 0 && (
+        <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--border)" }}>
+          <div className="px-3 py-2 text-xs font-semibold" style={{ background: "var(--border)", color: "var(--text-muted)" }}>Lãi theo từng năm (tối đa 10 năm)</div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ background: "var(--bg)" }}>
+                  <th className="px-3 py-2 text-left text-xs" style={{ color: "var(--text-muted)" }}>Năm</th>
+                  <th className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>Tổng tích lũy</th>
+                  <th className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>Tiền lãi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {yearRows.map((row, i) => (
+                  <tr key={row.year} style={{ background: i % 2 === 0 ? "var(--card)" : "var(--bg)" }}>
+                    <td className="px-3 py-2 font-semibold" style={{ color: "var(--text)" }}>Năm {row.year}</td>
+                    <td className="px-3 py-2 text-right text-green-500 font-medium">{formatNum(row.amount)} ₫</td>
+                    <td className="px-3 py-2 text-right font-medium" style={{ color: "var(--primary)" }}>+{formatNum(row.interest)} ₫</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const TAB_COMPONENTS: Record<TabId, React.FC> = {
   "percent-of": TabPercentOf,
   "what-percent": TabWhatPercent,
@@ -387,6 +500,7 @@ const TAB_COMPONENTS: Record<TabId, React.FC> = {
   "compare": TabCompare,
   "tip": TabTip,
   "interest": TabInterest,
+  "compound": TabCompound,
 };
 
 export default function Calculator() {
