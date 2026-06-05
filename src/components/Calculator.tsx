@@ -267,6 +267,113 @@ function TabInterest() {
   );
 }
 
+// ────────── Basic Calculator ──────────
+function BasicCalc() {
+  const [display, setDisplay] = useState("0");
+  const [expr, setExpr] = useState("");
+  const [justCalc, setJustCalc] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleBtn = (val: string) => {
+    if (val === "C") { setDisplay("0"); setExpr(""); setJustCalc(false); return; }
+    if (val === "⌫") {
+      if (justCalc) { setDisplay("0"); setExpr(""); setJustCalc(false); return; }
+      const next = display.length > 1 ? display.slice(0, -1) : "0";
+      setDisplay(next); setExpr(e => e.slice(0, -1)); return;
+    }
+    if (val === "=") {
+      try {
+        const raw = expr.replace(/×/g, "*").replace(/÷/g, "/").replace(/,/g, ".");
+        // eslint-disable-next-line no-new-func
+        const res = Function('"use strict"; return (" + raw + ")')();
+        const num = parseFloat(res.toFixed(10));
+        const formatted = isFinite(num) ? num.toLocaleString("vi-VN", { maximumFractionDigits: 8 }) : "Lỗi";
+        setDisplay(formatted);
+        setExpr(String(num));
+        setJustCalc(true);
+      } catch { setDisplay("Lỗi"); setJustCalc(true); }
+      return;
+    }
+    if (val === "%") {
+      try {
+        const raw = expr.replace(/×/g, "*").replace(/÷/g, "/");
+        // eslint-disable-next-line no-new-func
+        const res = Function('"use strict"; return (" + raw + ")')() / 100;
+        const formatted = parseFloat(res.toFixed(10)).toLocaleString("vi-VN", { maximumFractionDigits: 8 });
+        setDisplay(formatted); setExpr(String(res)); setJustCalc(true);
+      } catch { setDisplay("Lỗi"); }
+      return;
+    }
+    const isOp = ["+", "-", "×", "÷"].includes(val);
+    if (justCalc && !isOp) { setDisplay(val); setExpr(val); setJustCalc(false); return; }
+    if (justCalc && isOp) { setJustCalc(false); setDisplay(display + val); setExpr(e => e + val); return; }
+    if (val === "." && display.split(/[+\-×÷]/).pop()?.includes(".")) return;
+    if (isOp && expr && ["+", "-", "×", "÷"].includes(expr.slice(-1))) {
+      setExpr(e => e.slice(0, -1) + val);
+      setDisplay(d => d.slice(0, -1) + val);
+      return;
+    }
+    const newDisplay = (display === "0" && !isOp && val !== ".") ? val : display + val;
+    setDisplay(newDisplay);
+    setExpr(e => (e === "0" && !isOp && val !== ".") ? val : e + val);
+  };
+
+  const copy = () => { navigator.clipboard?.writeText(display.replace(/\./g, ",")); setCopied(true); setTimeout(() => setCopied(false), 1500); };
+
+  const BUTTONS = [
+    ["C", "⌫", "%", "÷"],
+    ["7", "8", "9", "×"],
+    ["4", "5", "6", "-"],
+    ["1", "2", "3", "+"],
+    [".", "0", "="],
+  ];
+
+  const isOp = (v: string) => ["+", "-", "×", "÷"].includes(v);
+  const isAction = (v: string) => ["C", "⌫", "%"].includes(v);
+
+  return (
+    <div className="max-w-lg mx-auto mt-4 rounded-2xl border shadow-sm overflow-hidden" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+      {/* Display */}
+      <div className="px-5 pt-4 pb-3" style={{ background: "var(--card)" }}>
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <p className="text-xs font-semibold tracking-wide" style={{ color: "var(--text-muted)" }}>MÁY TÍNH</p>
+          <button onClick={copy} className="text-xs px-2 py-0.5 rounded-lg font-semibold transition-all" style={{ background: copied ? "#22c55e" : "var(--border)", color: copied ? "#fff" : "var(--text-muted)" }}>{copied ? "✓" : "copy"}</button>
+        </div>
+        <div className="min-h-[3rem] flex items-end justify-end">
+          <p className="text-right font-bold leading-tight break-all" style={{ fontSize: display.length > 12 ? "1.4rem" : display.length > 8 ? "1.8rem" : "2.4rem", color: "var(--text)" }}>{display}</p>
+        </div>
+        {expr && !justCalc && <p className="text-right text-xs mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>{expr}</p>}
+      </div>
+      {/* Buttons */}
+      <div className="p-3 grid gap-2">
+        {BUTTONS.map((row, ri) => (
+          <div key={ri} className={`grid gap-2 ${row.length === 4 ? "grid-cols-4" : "grid-cols-[1fr_2fr_1fr]"}`}>
+            {row.map(btn => {
+              const eq = btn === "=";
+              const op = isOp(btn);
+              const ac = isAction(btn);
+              return (
+                <button
+                  key={btn}
+                  onClick={() => handleBtn(btn)}
+                  className="rounded-2xl py-4 text-xl font-bold transition-all active:scale-95 select-none"
+                  style={{
+                    background: eq ? "var(--primary)" : op ? "#dbeafe" : ac ? "var(--border)" : "var(--bg)",
+                    color: eq ? "#fff" : op ? "var(--primary)" : ac ? "var(--text)" : "var(--text)",
+                    boxShadow: eq ? "0 2px 12px rgba(37,99,235,0.3)" : "none",
+                  }}
+                >
+                  {btn}
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const TAB_COMPONENTS: Record<TabId, React.FC> = {
   "percent-of": TabPercentOf,
   "what-percent": TabWhatPercent,
@@ -368,6 +475,8 @@ export default function Calculator() {
         <div className="max-w-lg mx-auto rounded-2xl p-5 shadow-sm border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
           <ActiveTab key={activeTab} />
         </div>
+
+        <BasicCalc />
 
         {/* Info cards */}
         <div className="max-w-lg mx-auto mt-4 grid grid-cols-3 gap-3">
