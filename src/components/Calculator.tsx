@@ -274,6 +274,12 @@ function BasicCalc() {
   const [justCalc, setJustCalc] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const evalExpr = (e: string): number => {
+    const raw = e.replace(/×/g, "*").replace(/÷/g, "/").replace(/,/g, ".");
+    // eslint-disable-next-line no-new-func
+    return new Function("return (" + raw + ")")() as number;
+  };
+
   const handleBtn = (val: string) => {
     if (val === "C") { setDisplay("0"); setExpr(""); setJustCalc(false); return; }
     if (val === "⌫") {
@@ -283,9 +289,7 @@ function BasicCalc() {
     }
     if (val === "=") {
       try {
-        const raw = expr.replace(/×/g, "*").replace(/÷/g, "/").replace(/,/g, ".");
-        // eslint-disable-next-line no-new-func
-        const res = Function('"use strict"; return (" + raw + ")')();
+        const res = evalExpr(expr);
         const num = parseFloat(res.toFixed(10));
         const formatted = isFinite(num) ? num.toLocaleString("vi-VN", { maximumFractionDigits: 8 }) : "Lỗi";
         setDisplay(formatted);
@@ -296,11 +300,10 @@ function BasicCalc() {
     }
     if (val === "%") {
       try {
-        const raw = expr.replace(/×/g, "*").replace(/÷/g, "/");
-        // eslint-disable-next-line no-new-func
-        const res = Function('"use strict"; return (" + raw + ")')() / 100;
-        const formatted = parseFloat(res.toFixed(10)).toLocaleString("vi-VN", { maximumFractionDigits: 8 });
-        setDisplay(formatted); setExpr(String(res)); setJustCalc(true);
+        const res = evalExpr(expr) / 100;
+        const num = parseFloat(res.toFixed(10));
+        const formatted = num.toLocaleString("vi-VN", { maximumFractionDigits: 8 });
+        setDisplay(formatted); setExpr(String(num)); setJustCalc(true);
       } catch { setDisplay("Lỗi"); }
       return;
     }
