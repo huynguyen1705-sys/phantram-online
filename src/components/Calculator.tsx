@@ -425,12 +425,12 @@ function TabCompound() {
       <NumInput label="Lãi suất (% / năm)" value={rate} onChange={setRate} placeholder="VD: 8" suffix="%" />
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>Kỳ hạn</label>
-        <div className="flex gap-2">
-          <input type="number" value={period} onChange={e => setPeriod(e.target.value)} placeholder="VD: 5" inputMode="decimal"
-            className="flex-1 rounded-xl border px-4 py-3 text-lg font-semibold outline-none focus:ring-2 focus:ring-blue-400"
-            style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }} />
-          <button onClick={() => setPeriodUnit("year")} className={`px-4 rounded-xl text-sm font-semibold transition-all ${periodUnit === "year" ? "tab-active" : ""}`} style={periodUnit === "year" ? {} : { background: "var(--border)", color: "var(--text)" }}>Năm</button>
-          <button onClick={() => setPeriodUnit("month")} className={`px-4 rounded-xl text-sm font-semibold transition-all ${periodUnit === "month" ? "tab-active" : ""}`} style={periodUnit === "month" ? {} : { background: "var(--border)", color: "var(--text)" }}>Tháng</button>
+        <input type="number" value={period} onChange={e => setPeriod(e.target.value)} placeholder="VD: 5" inputMode="decimal"
+          className="w-full rounded-xl border px-4 py-3 text-lg font-semibold outline-none focus:ring-2 focus:ring-blue-400"
+          style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }} />
+        <div className="flex gap-2 mt-1">
+          <button onClick={() => setPeriodUnit("year")} className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all ${periodUnit === "year" ? "tab-active" : ""}`} style={periodUnit === "year" ? {} : { background: "var(--border)", color: "var(--text)" }}>Năm</button>
+          <button onClick={() => setPeriodUnit("month")} className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all ${periodUnit === "month" ? "tab-active" : ""}`} style={periodUnit === "month" ? {} : { background: "var(--border)", color: "var(--text)" }}>Tháng</button>
         </div>
       </div>
       <div className="flex flex-col gap-1">
