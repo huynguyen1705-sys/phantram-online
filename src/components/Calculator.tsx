@@ -541,6 +541,14 @@ export default function Calculator() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <a
+            href="https://phantram.online/blog/"
+            className="flex items-center gap-1 rounded-xl px-3 h-9 text-sm font-semibold transition-all active:scale-95 hover:opacity-80"
+            style={{ background: "var(--primary)", color: "#fff" }}
+          >
+            <span>📝</span>
+            <span>Blog</span>
+          </a>
           <button onClick={() => setShowHistory(h => !h)} className="w-9 h-9 rounded-xl flex items-center justify-center text-lg transition-all active:scale-95" style={{ background: "var(--border)" }} title="Lịch sử">🕐</button>
           <button onClick={toggleDark} className="w-9 h-9 rounded-xl flex items-center justify-center text-lg transition-all active:scale-95" style={{ background: "var(--border)" }}>{dark ? "☀️" : "🌙"}</button>
         </div>
