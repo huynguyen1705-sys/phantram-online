@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import BlogSection from "./BlogSection";
 
 type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound";
 
@@ -618,6 +619,8 @@ export default function Calculator() {
           ))}
         </div>
       </main>
+
+      <BlogSection />
 
       <footer className="text-center py-4 text-xs" style={{ color: "var(--text-muted)" }}>
         © 2026 phantram.online — Công cụ tính % miễn phí
