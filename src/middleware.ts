@@ -49,7 +49,7 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-// Match all blog paths to ensure middleware runs
+// Only match sitemap XML paths
 export const config = {
-  matcher: ["/blog/:path*"],
+  matcher: ["/blog/:path*.xml", "/blog/middleware-test"],
 };
