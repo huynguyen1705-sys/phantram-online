@@ -7,6 +7,7 @@ const BLOG = "https://blog.phantram.online";
 const BLOG_SLUGS = [
   // Cluster 1: Phần trăm cơ bản
   "tinh-phan-tram",
+  "kinh-nghiem-tinh-phan-tram",
   "cong-thuc-tinh-phan-tram",
   "cach-tinh-phan-tram-tang-giam",
   "tinh-phan-tram-giam-gia",
