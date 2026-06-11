@@ -10,6 +10,7 @@ export const viewport: Viewport = {
 
 const SITE_URL = "https://phantram.online";
 const OG_IMAGE = `${SITE_URL}/og-image.jpg`;
+const GA_ID = "G-G2DJ5FC3FB";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -193,6 +194,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFAQ) }}
+        />
+        <script
+          async
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}',{anonymize_ip:true});`,
+          }}
         />
       </head>
       <body>{children}</body>
