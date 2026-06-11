@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import BlogSection from "./BlogSection";
+import IntroSEO from "./IntroSEO";
 
 type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound";
 
@@ -537,7 +538,7 @@ export default function Calculator() {
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ background: "var(--primary)" }}>%</div>
           <div>
-            <h1 className="font-bold text-base leading-tight" style={{ color: "var(--text)" }}>Phần Trăm</h1>
+            <p className="font-bold text-base leading-tight" style={{ color: "var(--text)" }}>Phần Trăm</p>
             <p className="text-xs" style={{ color: "var(--text-muted)" }}>phantram.online</p>
           </div>
         </div>
@@ -621,6 +622,8 @@ export default function Calculator() {
       </main>
 
       <BlogSection />
+
+      <IntroSEO />
 
       <footer className="text-center py-4 text-xs" style={{ color: "var(--text-muted)" }}>
         © 2026 phantram.online — Công cụ tính % miễn phí
