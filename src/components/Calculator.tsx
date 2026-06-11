@@ -543,7 +543,7 @@ export default function Calculator() {
         </div>
         <div className="flex items-center gap-2">
           <a
-            href="https://phantram.online/blog/"
+            href="https://blog.phantram.online/"
             className="flex items-center gap-1 rounded-xl px-3 h-9 text-sm font-semibold transition-all active:scale-95 hover:opacity-80"
             style={{ background: "var(--primary)", color: "#fff" }}
           >

@@ -66,7 +66,8 @@ const CLUSTERS: Cluster[] = [
   },
 ];
 
-const WP_API = "https://phantram.online/blog/wp-json/wp/v2";
+const BLOG_DOMAIN = "https://blog.phantram.online";
+const WP_API = `${BLOG_DOMAIN}/wp-json/wp/v2`;
 
 function stripHtml(html: string) {
   return html.replace(/<[^>]+>/g, "").replace(/&[^;]+;/g, " ").trim();
@@ -117,7 +118,7 @@ export default function BlogSection() {
                   </span>
                 </div>
                 <a
-                  href={`https://phantram.online/blog/${cluster.pillarSlug}/`}
+                  href={`${BLOG_DOMAIN}/${cluster.pillarSlug}/`}
                   className="text-xs font-medium px-2 py-1 rounded-lg"
                   style={{ color: cluster.color, background: cluster.color + "15" }}
                 >
@@ -129,7 +130,7 @@ export default function BlogSection() {
                 {cluster.slugs.slice(0, 4).map((slug, i) => (
                   <a
                     key={slug}
-                    href={`https://phantram.online/blog/${slug}/`}
+                    href={`${BLOG_DOMAIN}/${slug}/`}
                     className="flex items-center gap-3 px-4 py-2.5 hover:opacity-80 transition-opacity"
                   >
                     <div
@@ -199,7 +200,7 @@ export default function BlogSection() {
         )}
         <div className="mt-4 text-center">
           <a
-            href="https://phantram.online/blog/"
+            href={`${BLOG_DOMAIN}/`}
             className="inline-flex items-center gap-1 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all active:scale-95"
             style={{ background: "var(--primary)", color: "#fff" }}
           >
