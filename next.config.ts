@@ -1,21 +1,20 @@
 import type { NextConfig } from "next";
 
-const WP_INTERNAL =
-  "http://wordpress-jfe8vq5y0pjsttbd20t6yn5m.45.128.210.165.sslip.io";
+const BLOG_DOMAIN = "https://blog.phantram.online";
 
 const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: false,
-  async rewrites() {
+  async redirects() {
     return [
-      { source: "/blog", destination: `${WP_INTERNAL}/` },
-      { source: "/blog/", destination: `${WP_INTERNAL}/` },
-      { source: "/blog/:path*", destination: `${WP_INTERNAL}/:path*` },
-      { source: "/wp-admin/:path*", destination: `${WP_INTERNAL}/wp-admin/:path*` },
-      { source: "/wp-login.php", destination: `${WP_INTERNAL}/wp-login.php` },
-      { source: "/wp-json/:path*", destination: `${WP_INTERNAL}/wp-json/:path*` },
-      { source: "/wp-content/:path*", destination: `${WP_INTERNAL}/wp-content/:path*` },
-      { source: "/wp-includes/:path*", destination: `${WP_INTERNAL}/wp-includes/:path*` },
+      { source: "/blog", destination: `${BLOG_DOMAIN}/`, permanent: true },
+      { source: "/blog/", destination: `${BLOG_DOMAIN}/`, permanent: true },
+      { source: "/blog/:path*", destination: `${BLOG_DOMAIN}/:path*`, permanent: true },
+      { source: "/wp-admin/:path*", destination: `${BLOG_DOMAIN}/wp-admin/:path*`, permanent: true },
+      { source: "/wp-login.php", destination: `${BLOG_DOMAIN}/wp-login.php`, permanent: true },
+      { source: "/wp-json/:path*", destination: `${BLOG_DOMAIN}/wp-json/:path*`, permanent: true },
+      { source: "/wp-content/:path*", destination: `${BLOG_DOMAIN}/wp-content/:path*`, permanent: true },
+      { source: "/wp-includes/:path*", destination: `${BLOG_DOMAIN}/wp-includes/:path*`, permanent: true },
     ];
   },
 };
