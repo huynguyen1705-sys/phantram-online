@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { headers } from "next/headers";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -24,7 +25,11 @@ function formatShort(n: number): string {
   return Math.round(n).toString();
 }
 
-export default async function Image({ searchParams }: { searchParams?: SP } = {}) {
+export default async function Image(_props: { searchParams?: SP } = {}) {
+  const h_ = await headers();
+  const qs = h_.get("x-search") || "";
+  const sp_: SP = Object.fromEntries(new URLSearchParams(qs.startsWith("?") ? qs.slice(1) : qs).entries());
+  const searchParams: SP = sp_;
   const total = parseFloat(pick(searchParams, "t"));
   const n = parseInt(pick(searchParams, "n"));
   const tip = parseFloat(pick(searchParams, "tip"));
