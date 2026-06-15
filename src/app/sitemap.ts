@@ -50,6 +50,7 @@ const TOOL_SLUGS = [
   "break-even",
   "scale-cong-thuc",
   "bmi",
+  "phan-tram-thoi-gian",
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -65,7 +66,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const tools: MetadataRoute.Sitemap = TOOL_SLUGS.map((slug) => ({
     url: `${BASE}/${slug}`,
     lastModified: now,
-    changeFrequency: "weekly",
+    changeFrequency: slug === "phan-tram-thoi-gian" ? "daily" : "weekly",
     priority: 0.9,
   }));
   const blog: MetadataRoute.Sitemap = BLOG_SLUGS.map((slug) => ({

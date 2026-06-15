@@ -7,7 +7,8 @@ export type ShareableTabId =
   | "compound"
   | "discount"
   | "breakeven"
-  | "tip";
+  | "tip"
+  | "time-progress";
 
 export const SHAREABLE_TAB_URL: Record<ShareableTabId, string> = {
   "weight-bmi": "/bmi",
@@ -16,6 +17,7 @@ export const SHAREABLE_TAB_URL: Record<ShareableTabId, string> = {
   "discount": "/tinh-giam-gia",
   "breakeven": "/break-even",
   "tip": "/chia-bill-tip",
+  "time-progress": "/phan-tram-thoi-gian",
 };
 
 export const SITE_ORIGIN = "https://phantram.online";
@@ -67,6 +69,14 @@ export type ShareStateBreakeven = {
   monthlyProfit?: string;
 };
 
+export type ShareStateTimeProgress = {
+  tab: "time-progress";
+  mode: "year" | "month" | "day" | "custom";
+  start?: string; // YYYY-MM-DD (custom mode)
+  end?: string;   // YYYY-MM-DD (custom mode)
+  title?: string; // custom title for custom mode
+};
+
 export type ShareStateTip = {
   tab: "tip";
   mode: "equal" | "byItem" | "custom";
@@ -91,7 +101,8 @@ export type ShareState =
   | ShareStateCompound
   | ShareStateDiscount
   | ShareStateBreakeven
-  | ShareStateTip;
+  | ShareStateTip
+  | ShareStateTimeProgress;
 
 // ───────── Encoders ─────────
 
@@ -148,6 +159,12 @@ export function encodeShareState(s: ShareState): string {
       setIf(p, "d", s.d);
       setIf(p, "r", s.r);
       break;
+    case "time-progress":
+      p.set("m", s.mode);
+      setIf(p, "s", s.start);
+      setIf(p, "e", s.end);
+      setIf(p, "t", s.title);
+      break;
   }
   return p.toString();
 }
@@ -160,6 +177,7 @@ export type DecodedCompound = Partial<Omit<ShareStateCompound, "tab">>;
 export type DecodedDiscount = Partial<Omit<ShareStateDiscount, "tab">>;
 export type DecodedBreakeven = Partial<Omit<ShareStateBreakeven, "tab">>;
 export type DecodedTip = Partial<Omit<ShareStateTip, "tab">>;
+export type DecodedTimeProgress = Partial<Omit<ShareStateTimeProgress, "tab">>;
 
 function getStr(p: URLSearchParams, k: string): string | undefined {
   const v = p.get(k);
@@ -220,6 +238,16 @@ export function decodeBreakeven(p: URLSearchParams): DecodedBreakeven {
   out.vc = getStr(p, "vc");
   out.capital = getStr(p, "c");
   out.monthlyProfit = getStr(p, "mp");
+  return out;
+}
+
+export function decodeTimeProgress(p: URLSearchParams): DecodedTimeProgress {
+  const out: DecodedTimeProgress = {};
+  const m = p.get("m");
+  if (m === "year" || m === "month" || m === "day" || m === "custom") out.mode = m;
+  out.start = getStr(p, "s");
+  out.end = getStr(p, "e");
+  out.title = getStr(p, "t");
   return out;
 }
 

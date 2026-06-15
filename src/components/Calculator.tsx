@@ -14,12 +14,14 @@ import {
   decodeDiscount,
   decodeBreakeven,
   decodeTip,
+  decodeTimeProgress,
   type DecodedBMI,
   type DecodedSalaryTax,
   type DecodedCompound,
   type DecodedDiscount,
   type DecodedBreakeven,
   type DecodedTip,
+  type DecodedTimeProgress,
 } from "@/lib/share-state";
 
 function ShareButton({ onClick }: { onClick: () => void }) {
@@ -34,7 +36,7 @@ function ShareButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-export type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound" | "salary-tax" | "breakeven" | "recipe-scale" | "weight-bmi";
+export type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound" | "salary-tax" | "breakeven" | "recipe-scale" | "weight-bmi" | "time-progress";
 
 export const TAB_URL_MAP: Record<TabId, string> = {
   "percent-of": "/tinh-phan-tram",
@@ -51,6 +53,7 @@ export const TAB_URL_MAP: Record<TabId, string> = {
   "breakeven": "/break-even",
   "recipe-scale": "/scale-cong-thuc",
   "weight-bmi": "/bmi",
+  "time-progress": "/phan-tram-thoi-gian",
 };
 
 export const TAB_DESCRIPTIONS: Record<TabId, string> = {
@@ -68,6 +71,7 @@ export const TAB_DESCRIPTIONS: Record<TabId, string> = {
   "breakeven": "Tính % cần lãi để bù lỗ, BEP bán hàng, thời gian hoàn vốn đầu tư",
   "recipe-scale": "Scale công thức nấu ăn cho nhiều/ít người ăn",
   "weight-bmi": "Tính BMI chuẩn châu Á + mục tiêu giảm cân + TDEE calo",
+  "time-progress": "Tính % đã qua của năm, tháng, ngày — share Facebook",
 };
 
 interface HistoryItem {
@@ -92,6 +96,7 @@ export const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "breakeven", label: "Hoàn vốn / Break-even", icon: "📉" },
   { id: "recipe-scale", label: "Scale công thức", icon: "🍳" },
   { id: "weight-bmi", label: "Giảm cân & BMI", icon: "⚖️" },
+  { id: "time-progress", label: "% Thời gian", icon: "📅" },
 ];
 
 export const TAB_GROUPS: { id: string; label: string; icon: string; tabs: TabId[] }[] = [
@@ -99,6 +104,7 @@ export const TAB_GROUPS: { id: string; label: string; icon: string; tabs: TabId[
   { id: "finance", label: "Tài chính", icon: "💰", tabs: ["interest", "compound", "salary-tax", "breakeven"] },
   { id: "shopping", label: "Mua sắm", icon: "🛒", tabs: ["discount", "compare", "tip"] },
   { id: "daily", label: "Tiện ích", icon: "🛠", tabs: ["recipe-scale", "weight-bmi"] },
+  { id: "time", label: "Thời gian", icon: "📅", tabs: ["time-progress"] },
 ];
 
 function formatNum(n: number): string {
@@ -2150,6 +2156,377 @@ Nhanh: ${formatNum(cal750)} kcal`;
   );
 }
 
+// ───────── TabTimeProgress: 4 modes (year/month/day/custom) ─────────
+
+// Vietnam timezone offset (UTC+7)
+const VN_OFFSET_MS = 7 * 60 * 60 * 1000;
+
+function nowVN(): Date {
+  // Return a Date whose UTC fields represent VN local time.
+  // (Server/client safe: we read the elapsed real wall time and shift to VN.)
+  return new Date(Date.now() + VN_OFFSET_MS);
+}
+
+function pad2(n: number): string {
+  return n < 10 ? "0" + n : String(n);
+}
+
+function daysInMonth(year: number, monthIdx0: number): number {
+  return new Date(Date.UTC(year, monthIdx0 + 1, 0)).getUTCDate();
+}
+
+function isLeap(y: number): boolean {
+  return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+}
+
+function pctGradient(pct: number): string {
+  if (pct < 30) return "linear-gradient(90deg, #22c55e, #4ade80)";
+  if (pct < 60) return "linear-gradient(90deg, #22c55e, #eab308)";
+  if (pct < 90) return "linear-gradient(90deg, #eab308, #f97316)";
+  return "linear-gradient(90deg, #f97316, #ef4444)";
+}
+
+function pctTextColor(pct: number): string {
+  if (pct < 30) return "#22c55e";
+  if (pct < 60) return "#eab308";
+  if (pct < 90) return "#f97316";
+  return "#ef4444";
+}
+
+function motivational(pct: number): string {
+  if (pct < 25) return "Năm vẫn còn rất dài, hãy bắt đầu kế hoạch lớn 🚀";
+  if (pct < 50) return "Đã đi được 1/4 chặng đường — kiểm tra lại mục tiêu nhé 📋";
+  if (pct < 75) return "Đã qua nửa năm — đẩy ga lên! 🏃";
+  if (pct < 90) return "Quý 4 rồi — không còn nhiều thời gian ⏰";
+  return "Sắp hết năm! Cảm ơn năm qua 🎉";
+}
+
+function dayPartEmoji(hour: number): string {
+  if (hour < 5) return "🌙";
+  if (hour < 11) return "🌅";
+  if (hour < 14) return "☀️";
+  if (hour < 18) return "🌤";
+  if (hour < 21) return "🌆";
+  return "🌙";
+}
+
+function TabTimeProgress({ initial }: { initial?: DecodedTimeProgress } = {}) {
+  const [mode, setMode] = useState<"year" | "month" | "day" | "custom">(initial?.mode ?? "year");
+  const [tick, setTick] = useState(0);
+  const [startStr, setStartStr] = useState(initial?.start ?? "");
+  const [endStr, setEndStr] = useState(initial?.end ?? "");
+  const [customTitle, setCustomTitle] = useState(initial?.title ?? "");
+  const [shareOpen, setShareOpen] = useState(false);
+
+  // Live update — frequency depends on mode
+  useEffect(() => {
+    const intervalMs = mode === "day" ? 1000 : mode === "custom" ? 0 : 60_000;
+    if (intervalMs === 0) return;
+    const id = setInterval(() => setTick(t => t + 1), intervalMs);
+    return () => clearInterval(id);
+  }, [mode]);
+
+  // Force read of `tick` so React re-renders
+  void tick;
+
+  const now = nowVN();
+  const Y = now.getUTCFullYear();
+  const M = now.getUTCMonth(); // 0-indexed
+  const D = now.getUTCDate();
+  const hh = now.getUTCHours();
+  const mm = now.getUTCMinutes();
+  const ss = now.getUTCSeconds();
+
+  // Year mode calcs
+  const yearStart = Date.UTC(Y, 0, 1);
+  const yearEnd = Date.UTC(Y + 1, 0, 1);
+  const yearElapsed = now.getTime() - yearStart;
+  const yearTotal = yearEnd - yearStart;
+  const yearPct = (yearElapsed / yearTotal) * 100;
+  const yearDaysTotal = isLeap(Y) ? 366 : 365;
+  const yearDayIndex = Math.floor((now.getTime() - yearStart) / 86_400_000) + 1; // 1-based
+  const yearDaysLeft = yearDaysTotal - yearDayIndex;
+  const weekIndex = Math.ceil(yearDayIndex / 7);
+  const quarter = Math.floor(M / 3) + 1; // 1..4
+  const qStartMonth = (quarter - 1) * 3;
+  const qStart = Date.UTC(Y, qStartMonth, 1);
+  const qEnd = Date.UTC(Y, qStartMonth + 3, 1);
+  const qPct = ((now.getTime() - qStart) / (qEnd - qStart)) * 100;
+
+  // Month mode calcs
+  const monthStart = Date.UTC(Y, M, 1);
+  const monthEnd = Date.UTC(Y, M + 1, 1);
+  const monthPct = ((now.getTime() - monthStart) / (monthEnd - monthStart)) * 100;
+  const monthDays = daysInMonth(Y, M);
+  let weekendCount = 0;
+  for (let d = 1; d <= monthDays; d++) {
+    const dow = new Date(Date.UTC(Y, M, d)).getUTCDay();
+    if (dow === 0 || dow === 6) weekendCount++;
+  }
+  const weekdayCount = monthDays - weekendCount;
+
+  // Day mode calcs
+  const dayMinutes = hh * 60 + mm + ss / 60;
+  const dayPct = (dayMinutes / 1440) * 100;
+  const minsLeftInDay = 1440 - dayMinutes;
+  const hLeft = Math.floor(minsLeftInDay / 60);
+  const mLeft = Math.floor(minsLeftInDay % 60);
+
+  // Custom mode calcs
+  let customPct = NaN;
+  let customDaysTotal = 0;
+  let customDaysElapsed = 0;
+  let customDaysLeft = 0;
+  if (mode === "custom" && startStr && endStr) {
+    const s = new Date(startStr + "T00:00:00Z").getTime();
+    const e = new Date(endStr + "T00:00:00Z").getTime();
+    if (e > s) {
+      customDaysTotal = Math.round((e - s) / 86_400_000);
+      customPct = ((now.getTime() - s) / (e - s)) * 100;
+      customDaysElapsed = Math.max(0, Math.min(customDaysTotal, Math.floor((now.getTime() - s) / 86_400_000)));
+      customDaysLeft = customDaysTotal - customDaysElapsed;
+    }
+  }
+
+  // Active pct + display number
+  let pct = 0;
+  let bigNum = "—";
+  let categoryPill = "";
+  let subtitle = "";
+  let detailCards: { label: string; value: string }[] = [];
+  let canShare = true;
+
+  const VN_MONTH = `Tháng ${M + 1}`;
+  const VN_DATE = `${pad2(D)}/${pad2(M + 1)}`;
+  const VN_TIME = `${pad2(hh)}:${pad2(mm)}`;
+
+  if (mode === "year") {
+    pct = yearPct;
+    bigNum = pct.toFixed(1) + "%";
+    categoryPill = `Năm ${Y}`;
+    subtitle = `Hôm nay ${VN_DATE} — đã qua ${yearDayIndex} ngày, còn lại ${yearDaysLeft} ngày`;
+    detailCards = [
+      { label: "Ngày trong năm", value: `${yearDayIndex}/${yearDaysTotal}` },
+      { label: "Tuần", value: `${Math.min(weekIndex, 53)}/${isLeap(Y) ? 53 : 52}` },
+      { label: "Tháng", value: `${M + 1}/12` },
+      { label: `Quý ${quarter}`, value: `${qPct.toFixed(0)}% của Q${quarter}` },
+    ];
+  } else if (mode === "month") {
+    pct = monthPct;
+    bigNum = pct.toFixed(1) + "%";
+    categoryPill = `${VN_MONTH}/${Y}`;
+    subtitle = `Tháng ${M + 1} — đã qua ${D}/${monthDays} ngày, còn ${monthDays - D} ngày`;
+    detailCards = [
+      { label: "Ngày", value: `${D}/${monthDays}` },
+      { label: "Tuần", value: `${Math.ceil(D / 7)}/${Math.ceil(monthDays / 7)}` },
+      { label: "Cuối tuần", value: `${weekendCount} ngày` },
+      { label: "Ngày làm", value: `${weekdayCount} ngày` },
+    ];
+  } else if (mode === "day") {
+    pct = dayPct;
+    bigNum = pct.toFixed(1) + "%";
+    categoryPill = `${VN_TIME} ngày ${VN_DATE}`;
+    subtitle = `${pad2(hh)}:${pad2(mm)}:${pad2(ss)} — đã qua ${pct.toFixed(1)}% của ngày ${VN_DATE}`;
+    detailCards = [
+      { label: "Giờ hiện tại", value: `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}` },
+      { label: "Buổi", value: dayPartEmoji(hh) },
+      { label: "Còn lại", value: `${hLeft}h ${pad2(mLeft)}p` },
+      { label: "Đã qua", value: `${Math.floor(dayMinutes / 60)}h ${pad2(Math.floor(dayMinutes % 60))}p` },
+    ];
+  } else {
+    // custom
+    if (!isNaN(customPct) && customDaysTotal > 0) {
+      pct = Math.max(0, Math.min(100, customPct));
+      bigNum = customPct.toFixed(1) + "%";
+      categoryPill = customTitle || "Mốc tuỳ chỉnh";
+      subtitle = `${customDaysElapsed}/${customDaysTotal} ngày — còn ${Math.max(0, customDaysLeft)} ngày`;
+      detailCards = [
+        { label: "Bắt đầu", value: startStr },
+        { label: "Kết thúc", value: endStr },
+        { label: "Đã qua", value: `${customDaysElapsed} ngày` },
+        { label: "Còn lại", value: `${Math.max(0, customDaysLeft)} ngày` },
+      ];
+    } else {
+      canShare = false;
+      bigNum = "—";
+      subtitle = "Nhập ngày bắt đầu và kết thúc để tính %";
+    }
+  }
+
+  const pctClamped = Math.max(0, Math.min(100, pct));
+  const barColor = pctGradient(pctClamped);
+  const numColor = pctTextColor(pctClamped);
+
+  const shareData = useMemo(() => {
+    if (!canShare) return null;
+    const state: import("@/lib/share-state").ShareStateTimeProgress = {
+      tab: "time-progress",
+      mode,
+      ...(mode === "custom" ? { start: startStr, end: endStr, title: customTitle || undefined } : {}),
+    };
+    let title = "";
+    let text = "";
+    if (mode === "year") {
+      title = `Năm ${Y} đã qua ${pct.toFixed(1)}%`;
+      text = `📅 Năm ${Y} đã đi được ${pct.toFixed(1)}%! Còn ${yearDaysLeft} ngày để hoàn thành mục tiêu.`;
+    } else if (mode === "month") {
+      title = `${VN_MONTH} đã qua ${pct.toFixed(1)}%`;
+      text = `📆 Tháng ${M + 1}/${Y} đã đi được ${pct.toFixed(1)}% — còn ${monthDays - D} ngày.`;
+    } else if (mode === "day") {
+      title = `Hôm nay ${VN_DATE} đã qua ${pct.toFixed(1)}%`;
+      text = `🕐 ${VN_TIME} — ngày ${VN_DATE} đã qua ${pct.toFixed(1)}%. Còn ${hLeft}h ${pad2(mLeft)}p tới nửa đêm.`;
+    } else {
+      title = (customTitle || "Cột mốc") + ` — đã qua ${pct.toFixed(1)}%`;
+      text = `📅 ${customTitle || "Mốc"}: ${customDaysElapsed}/${customDaysTotal} ngày (${pct.toFixed(1)}%)`;
+    }
+    return {
+      url: buildShareUrl(state),
+      ogImageUrl: buildOgImageUrl(state),
+      title,
+      text,
+    };
+    // Re-build on key state changes:
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, startStr, endStr, customTitle, Math.round(pct * 10)]);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+        Hôm nay đã qua bao nhiêu phần trăm? Tính live năm / tháng / ngày / mốc tuỳ chỉnh.
+      </p>
+
+      {/* Mode buttons */}
+      <div className="grid grid-cols-4 gap-2">
+        {([
+          { id: "year", label: "Năm", icon: "📅" },
+          { id: "month", label: "Tháng", icon: "📆" },
+          { id: "day", label: "Ngày", icon: "🕐" },
+          { id: "custom", label: "Tuỳ chỉnh", icon: "🎯" },
+        ] as const).map(b => (
+          <button
+            key={b.id}
+            onClick={() => setMode(b.id)}
+            className={`rounded-xl py-2.5 text-xs sm:text-sm font-semibold transition-all active:scale-95 ${mode === b.id ? "tab-active" : ""}`}
+            style={mode === b.id ? {} : { background: "var(--border)", color: "var(--text)" }}
+          >
+            <span className="mr-1">{b.icon}</span>
+            <span>{b.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Custom inputs */}
+      {mode === "custom" && (
+        <div className="flex flex-col gap-3 rounded-xl p-3" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>Tiêu đề (tuỳ chọn)</label>
+            <input
+              type="text"
+              value={customTitle}
+              onChange={e => setCustomTitle(e.target.value)}
+              placeholder="VD: Deadline dự án, Đám cưới..."
+              className="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400"
+              style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>Ngày bắt đầu</label>
+              <input
+                type="date"
+                value={startStr}
+                onChange={e => setStartStr(e.target.value)}
+                className="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400"
+                style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>Ngày kết thúc</label>
+              <input
+                type="date"
+                value={endStr}
+                onChange={e => setEndStr(e.target.value)}
+                className="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400"
+                style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Category pill */}
+      {categoryPill && (
+        <div className="flex justify-center">
+          <span
+            className="inline-block rounded-full px-4 py-1.5 text-sm font-semibold"
+            style={{ background: numColor, color: "#fff" }}
+          >
+            {categoryPill}
+          </span>
+        </div>
+      )}
+
+      {/* Big number */}
+      <div className="text-center py-2">
+        <p
+          className="font-black leading-none"
+          style={{ fontSize: "clamp(72px, 18vw, 160px)", color: numColor, letterSpacing: "-0.04em" }}
+        >
+          {bigNum}
+        </p>
+      </div>
+
+      {/* Progress bar */}
+      <div className="w-full rounded-full overflow-hidden" style={{ height: 12, background: "var(--border)" }}>
+        <div
+          className="h-full transition-all duration-500"
+          style={{ width: `${pctClamped}%`, background: barColor }}
+        />
+      </div>
+
+      {/* Subtitle */}
+      {subtitle && (
+        <p className="text-center text-sm" style={{ color: "var(--text-muted)" }}>
+          {subtitle}
+        </p>
+      )}
+
+      {/* Detail cards */}
+      {detailCards.length > 0 && (
+        <div className="grid grid-cols-2 gap-2">
+          {detailCards.map((c, i) => (
+            <div key={i} className="rounded-xl p-3" style={{ background: "var(--border)" }}>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>{c.label}</p>
+              <p className="font-bold text-base mt-0.5" style={{ color: "var(--text)" }}>{c.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Motivational note (year mode only) */}
+      {mode === "year" && (
+        <div className="rounded-xl p-3 text-center text-sm font-medium" style={{ background: "var(--result-bg)", color: "var(--result-text)" }}>
+          {motivational(pctClamped)}
+        </div>
+      )}
+
+      {shareData && (
+        <>
+          <ShareButton onClick={() => setShareOpen(true)} />
+          <ShareModal
+            open={shareOpen}
+            onClose={() => setShareOpen(false)}
+            url={shareData.url}
+            title={shareData.title}
+            text={shareData.text}
+            ogImageUrl={shareData.ogImageUrl}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
 // TAB_COMPONENTS map kept for non-shareable tabs.
 // Shareable tabs (discount, compound, salary-tax, breakeven, weight-bmi) accept an optional `initial` prop.
 const TAB_COMPONENTS: Record<TabId, React.FC> = {
@@ -2167,6 +2544,7 @@ const TAB_COMPONENTS: Record<TabId, React.FC> = {
   "breakeven": TabBreakeven as unknown as React.FC,
   "recipe-scale": TabRecipeScale,
   "weight-bmi": TabWeightBMI as unknown as React.FC,
+  "time-progress": TabTimeProgress as unknown as React.FC,
 };
 
 // ────────── Shared UI pieces ──────────
@@ -2313,6 +2691,7 @@ function CalculatorInner({ initialTab, singleTab = false, breadcrumb }: Calculat
       case "discount":     return { tab: initialTab, data: decodeDiscount(p) };
       case "breakeven":    return { tab: initialTab, data: decodeBreakeven(p) };
       case "tip":          return { tab: initialTab, data: decodeTip(p) };
+      case "time-progress": return { tab: initialTab, data: decodeTimeProgress(p) };
       default: return null;
     }
   }, [initialTab, searchParams]);
