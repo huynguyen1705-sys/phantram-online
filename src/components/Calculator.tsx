@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import BlogSection from "./BlogSection";
 import IntroSEO from "./IntroSEO";
 
-type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound" | "salary-tax" | "breakeven" | "recipe-scale";
+type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound" | "salary-tax" | "breakeven" | "recipe-scale" | "weight-bmi";
 
 interface HistoryItem {
   id: number;
@@ -26,13 +26,14 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "salary-tax", label: "Lương Net (Thuế TNCN)", icon: "💼" },
   { id: "breakeven", label: "Hoàn vốn / Break-even", icon: "📉" },
   { id: "recipe-scale", label: "Scale công thức", icon: "🍳" },
+  { id: "weight-bmi", label: "Giảm cân & BMI", icon: "⚖️" },
 ];
 
 const TAB_GROUPS: { id: string; label: string; icon: string; tabs: TabId[] }[] = [
   { id: "basic", label: "Cơ bản", icon: "🧮", tabs: ["percent-of", "what-percent", "change", "increase-decrease", "find-base"] },
   { id: "finance", label: "Tài chính", icon: "💰", tabs: ["interest", "compound", "salary-tax", "breakeven"] },
   { id: "shopping", label: "Mua sắm", icon: "🛒", tabs: ["discount", "compare", "tip"] },
-  { id: "daily", label: "Tiện ích", icon: "🛠", tabs: ["recipe-scale"] },
+  { id: "daily", label: "Tiện ích", icon: "🛠", tabs: ["recipe-scale", "weight-bmi"] },
 ];
 
 function formatNum(n: number): string {
@@ -964,6 +965,386 @@ function TabRecipeScale() {
   );
 }
 
+const ACTIVITY_OPTIONS: { value: 1.2 | 1.375 | 1.55 | 1.725 | 1.9; label: string; desc: string }[] = [
+  { value: 1.2, label: "Ít vận động", desc: "ít/không tập" },
+  { value: 1.375, label: "Nhẹ", desc: "1-3 buổi/tuần" },
+  { value: 1.55, label: "Trung bình", desc: "3-5 buổi/tuần" },
+  { value: 1.725, label: "Nhiều", desc: "6-7 buổi/tuần" },
+  { value: 1.9, label: "Rất nhiều", desc: "2 buổi/ngày / lao động nặng" },
+];
+
+function bmiCategory(bmi: number): { label: string; color: string; textClass: string; bgClass: string } {
+  if (bmi < 18.5) return { label: "Thiếu cân", color: "#3b82f6", textClass: "text-blue-500", bgClass: "bg-blue-500/10" };
+  if (bmi < 23) return { label: "Bình thường", color: "#22c55e", textClass: "text-green-500", bgClass: "bg-green-500/10" };
+  if (bmi < 25) return { label: "Thừa cân", color: "#eab308", textClass: "text-yellow-500", bgClass: "bg-yellow-500/10" };
+  if (bmi < 30) return { label: "Béo phì độ I", color: "#f97316", textClass: "text-orange-500", bgClass: "bg-orange-500/10" };
+  return { label: "Béo phì độ II+", color: "#ef4444", textClass: "text-red-500", bgClass: "bg-red-500/10" };
+}
+
+function TabWeightBMI() {
+  const [mode, setMode] = useState<"bmi" | "goal" | "calorie">("bmi");
+  const [sex, setSex] = useState<"male" | "female">("male");
+  const [height, setHeight] = useState("");
+  const [weight, setWeight] = useState("");
+  const [age, setAge] = useState("");
+  const [activity, setActivity] = useState<1.2 | 1.375 | 1.55 | 1.725 | 1.9>(1.55);
+  const [goalMode, setGoalMode] = useState<"percent" | "absolute">("percent");
+  const [goalPercent, setGoalPercent] = useState("");
+  const [goalWeight, setGoalWeight] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const hN = parseFloat(height);
+  const wN = parseFloat(weight);
+  const ageN = parseFloat(age);
+  const hM = !isNaN(hN) && hN > 0 ? hN / 100 : NaN;
+  const bmi = !isNaN(hM) && !isNaN(wN) && wN > 0 ? wN / (hM * hM) : NaN;
+  const idealMin = !isNaN(hM) ? 18.5 * hM * hM : NaN;
+  const idealMax = !isNaN(hM) ? 22.9 * hM * hM : NaN;
+  const cat = !isNaN(bmi) ? bmiCategory(bmi) : null;
+
+  // BMI position 0-100 on the bar (clamp 15..35)
+  const bmiPos = !isNaN(bmi) ? Math.max(0, Math.min(100, ((bmi - 15) / (35 - 15)) * 100)) : NaN;
+
+  // Mode B — Goal
+  const goalPctN = parseFloat(goalPercent);
+  const goalWN = parseFloat(goalWeight);
+  let targetWeight = NaN;
+  let lossKg = NaN;
+  let effectivePct = NaN;
+  if (!isNaN(wN) && wN > 0) {
+    if (goalMode === "percent" && !isNaN(goalPctN) && goalPctN > 0) {
+      targetWeight = wN * (100 - goalPctN) / 100;
+      lossKg = wN - targetWeight;
+      effectivePct = goalPctN;
+    } else if (goalMode === "absolute" && !isNaN(goalWN) && goalWN > 0 && goalWN < wN) {
+      targetWeight = goalWN;
+      lossKg = wN - goalWN;
+      effectivePct = (lossKg / wN) * 100;
+    }
+  }
+  const weeksSlow = !isNaN(lossKg) && lossKg > 0 ? lossKg / 0.5 : NaN;
+  const weeksFast = !isNaN(lossKg) && lossKg > 0 ? lossKg / 1 : NaN;
+  const monthsSlow = !isNaN(weeksSlow) ? weeksSlow / 4.345 : NaN;
+  const monthsFast = !isNaN(weeksFast) ? weeksFast / 4.345 : NaN;
+  const goalTooHigh = !isNaN(effectivePct) && effectivePct > 15;
+  const goalRisky = !isNaN(effectivePct) && effectivePct > 20;
+
+  // Mode C — BMR + TDEE
+  const bmr = !isNaN(wN) && !isNaN(hN) && !isNaN(ageN) && wN > 0 && hN > 0 && ageN > 0
+    ? (sex === "male"
+        ? 10 * wN + 6.25 * hN - 5 * ageN + 5
+        : 10 * wN + 6.25 * hN - 5 * ageN - 161)
+    : NaN;
+  const tdee = !isNaN(bmr) ? bmr * activity : NaN;
+  const cal300 = !isNaN(tdee) ? tdee - 300 : NaN;
+  const cal500 = !isNaN(tdee) ? tdee - 500 : NaN;
+  const cal750 = !isNaN(tdee) ? tdee - 750 : NaN;
+  const minCal = sex === "male" ? 1500 : 1200;
+
+  // Result strings
+  let result = "";
+  let formula = "";
+  if (mode === "bmi") {
+    if (!isNaN(bmi) && cat) {
+      result = `BMI ${bmi.toFixed(1)} — ${cat.label}`;
+      formula = `${weight} ÷ (${hM.toFixed(2)})² = ${bmi.toFixed(1)} | Cân lý tưởng: ${formatNum(idealMin)}–${formatNum(idealMax)} kg`;
+    }
+  } else if (mode === "goal") {
+    if (!isNaN(targetWeight)) {
+      result = `Đích: ${formatNum(targetWeight)} kg — giảm ${formatNum(lossKg)} kg (${formatNum(effectivePct)}%)`;
+      formula = `Thời gian: ${formatNum(weeksFast)}–${formatNum(weeksSlow)} tuần (≈1–0.5 kg/tuần)`;
+    }
+  } else {
+    if (!isNaN(tdee)) {
+      result = `TDEE ${formatNum(tdee)} kcal/ngày — BMR ${formatNum(bmr)}`;
+      formula = `Giảm chậm: ${formatNum(cal300)} | Trung bình: ${formatNum(cal500)} | Nhanh: ${formatNum(cal750)} kcal/ngày`;
+    }
+  }
+  const copy = () => { navigator.clipboard?.writeText(`${result}\n${formula}`); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+
+  const diffMsg = (() => {
+    if (isNaN(bmi) || !cat || isNaN(idealMin) || isNaN(idealMax)) return "";
+    if (bmi < 18.5) return `Tăng ${formatNum(idealMin - wN)} kg để vào ngưỡng bình thường`;
+    if (bmi <= 22.9) return "Cân nặng đang ổn — trong ngưỡng bình thường 🎉";
+    return `Cần giảm ${formatNum(wN - idealMax)} kg để vào ngưỡng bình thường`;
+  })();
+
+  const goalRefTable = [
+    { pct: "5%", safe: "✅", time: "1–2 tháng" },
+    { pct: "10%", safe: "✅", time: "2–5 tháng" },
+    { pct: "15%", safe: "⚠️", time: "4–7 tháng" },
+    { pct: ">20%", safe: "❌", time: "Cần tư vấn BS" },
+  ];
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm" style={{ color: "var(--text-muted)" }}>Tính BMI, mục tiêu giảm cân theo %, hoặc calo TDEE để giảm cân an toàn.</p>
+      <div className="flex gap-2">
+        <button onClick={() => setMode("bmi")} className={`flex-1 rounded-xl py-2.5 text-xs font-semibold transition-all ${mode === "bmi" ? "tab-active" : ""}`} style={mode === "bmi" ? {} : { background: "var(--border)", color: "var(--text)" }}>BMI</button>
+        <button onClick={() => setMode("goal")} className={`flex-1 rounded-xl py-2.5 text-xs font-semibold transition-all ${mode === "goal" ? "tab-active" : ""}`} style={mode === "goal" ? {} : { background: "var(--border)", color: "var(--text)" }}>Giảm cân %</button>
+        <button onClick={() => setMode("calorie")} className={`flex-1 rounded-xl py-2.5 text-xs font-semibold transition-all ${mode === "calorie" ? "tab-active" : ""}`} style={mode === "calorie" ? {} : { background: "var(--border)", color: "var(--text)" }}>Calo</button>
+      </div>
+
+      {/* Shared sex toggle */}
+      <div className="flex gap-2">
+        <button onClick={() => setSex("male")} className={`flex-1 rounded-xl py-2 text-xs font-semibold transition-all ${sex === "male" ? "tab-active" : ""}`} style={sex === "male" ? {} : { background: "var(--card)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>♂ Nam</button>
+        <button onClick={() => setSex("female")} className={`flex-1 rounded-xl py-2 text-xs font-semibold transition-all ${sex === "female" ? "tab-active" : ""}`} style={sex === "female" ? {} : { background: "var(--card)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>♀ Nữ</button>
+      </div>
+
+      {mode === "bmi" && (
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <NumInput label="Chiều cao (cm)" value={height} onChange={setHeight} placeholder="VD: 165" suffix="cm" />
+            <NumInput label="Cân nặng (kg)" value={weight} onChange={setWeight} placeholder="VD: 60" suffix="kg" />
+          </div>
+
+          {!isNaN(bmi) && cat && (
+            <>
+              <div className={`rounded-2xl p-4 ${cat.bgClass}`}>
+                <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                  <div>
+                    <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>Chỉ số BMI</p>
+                    <p className={`text-3xl font-bold ${cat.textClass}`}>{bmi.toFixed(1)}</p>
+                  </div>
+                  <p className={`text-base font-bold ${cat.textClass}`}>{cat.label}</p>
+                </div>
+
+                <div className="mt-4 relative">
+                  <div className="flex h-3 rounded-full overflow-hidden">
+                    <div className="flex-1 bg-blue-500" />
+                    <div className="flex-1 bg-green-500" />
+                    <div className="flex-1 bg-yellow-500" />
+                    <div className="flex-1 bg-orange-500" />
+                    <div className="flex-1 bg-red-500" />
+                  </div>
+                  <div
+                    className="absolute -top-1 w-5 h-5 rounded-full border-2 border-white shadow-lg"
+                    style={{ left: `calc(${bmiPos}% - 10px)`, background: cat.color }}
+                  />
+                  <div className="flex justify-between text-[10px] mt-2" style={{ color: "var(--text-muted)" }}>
+                    <span>15</span><span>18.5</span><span>23</span><span>25</span><span>30</span><span>35</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-xl p-3" style={{ background: "var(--border)" }}>
+                  <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Cân lý tưởng</p>
+                  <p className="font-bold text-sm text-green-500">{formatNum(idealMin)}–{formatNum(idealMax)} kg</p>
+                </div>
+                <div className="rounded-xl p-3" style={{ background: "var(--border)" }}>
+                  <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Chênh lệch</p>
+                  <p className="font-bold text-sm" style={{ color: "var(--primary)" }}>{diffMsg.replace(/^(Tăng |Cần giảm |Cân nặng đang.*)/, (m) => m.length > 24 ? m.slice(0, 22) + "…" : m) || "—"}</p>
+                </div>
+              </div>
+
+              {diffMsg && (
+                <p className="text-sm font-medium px-2" style={{ color: "var(--text)" }}>{diffMsg}</p>
+              )}
+            </>
+          )}
+
+          <ResultBox result={result} formula={formula} onCopy={copy} copied={copied} />
+
+          <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--border)" }}>
+            <div className="px-3 py-2 text-xs font-semibold" style={{ background: "var(--border)", color: "var(--text-muted)" }}>Phân loại BMI (WHO Asia-Pacific)</div>
+            <table className="w-full text-sm">
+              <tbody>
+                <tr style={{ background: "var(--card)" }}><td className="px-3 py-1.5 text-blue-500 font-medium">&lt; 18.5</td><td className="px-3 py-1.5 text-right">Thiếu cân</td></tr>
+                <tr style={{ background: "var(--bg)" }}><td className="px-3 py-1.5 text-green-500 font-medium">18.5 – 22.9</td><td className="px-3 py-1.5 text-right">Bình thường</td></tr>
+                <tr style={{ background: "var(--card)" }}><td className="px-3 py-1.5 text-yellow-500 font-medium">23 – 24.9</td><td className="px-3 py-1.5 text-right">Thừa cân</td></tr>
+                <tr style={{ background: "var(--bg)" }}><td className="px-3 py-1.5 text-orange-500 font-medium">25 – 29.9</td><td className="px-3 py-1.5 text-right">Béo phì độ I</td></tr>
+                <tr style={{ background: "var(--card)" }}><td className="px-3 py-1.5 text-red-500 font-medium">≥ 30</td><td className="px-3 py-1.5 text-right">Béo phì độ II+</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+            💡 Công thức: <strong>BMI = Cân nặng (kg) ÷ (Chiều cao m)²</strong>. Chuẩn WHO Asia-Pacific cho người châu Á.
+          </p>
+        </>
+      )}
+
+      {mode === "goal" && (
+        <>
+          <NumInput label="Cân nặng hiện tại (kg)" value={weight} onChange={setWeight} placeholder="VD: 70" suffix="kg" />
+          <div className="flex gap-2">
+            <button onClick={() => setGoalMode("percent")} className={`flex-1 rounded-xl py-2 text-xs font-semibold transition-all ${goalMode === "percent" ? "tab-active" : ""}`} style={goalMode === "percent" ? {} : { background: "var(--card)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>Theo %</button>
+            <button onClick={() => setGoalMode("absolute")} className={`flex-1 rounded-xl py-2 text-xs font-semibold transition-all ${goalMode === "absolute" ? "tab-active" : ""}`} style={goalMode === "absolute" ? {} : { background: "var(--card)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>Theo cân đích</button>
+          </div>
+          {goalMode === "percent" ? (
+            <NumInput label="% giảm mục tiêu" value={goalPercent} onChange={setGoalPercent} placeholder="VD: 10" suffix="%" />
+          ) : (
+            <NumInput label="Cân nặng đích (kg)" value={goalWeight} onChange={setGoalWeight} placeholder="VD: 63" suffix="kg" />
+          )}
+
+          {!isNaN(targetWeight) && (
+            <>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
+                  <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Cân đích</p>
+                  <p className="font-bold text-sm" style={{ color: "var(--primary)" }}>{formatNum(targetWeight)} kg</p>
+                </div>
+                <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
+                  <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Cần giảm</p>
+                  <p className="font-bold text-sm text-orange-500">{formatNum(lossKg)} kg</p>
+                </div>
+                <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
+                  <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>% giảm</p>
+                  <p className="font-bold text-sm text-green-500">{formatNum(effectivePct)}%</p>
+                </div>
+              </div>
+
+              <div className="rounded-xl p-3" style={{ background: "var(--result-bg)" }}>
+                <p className="text-xs font-medium mb-2" style={{ color: "var(--text-muted)" }}>Thời gian ước tính</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>0.5 kg/tuần (an toàn)</p>
+                    <p className="font-bold text-green-500">{formatNum(weeksSlow)} tuần (~{formatNum(monthsSlow)} tháng)</p>
+                  </div>
+                  <div>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>1 kg/tuần (nhanh)</p>
+                    <p className="font-bold text-orange-500">{formatNum(weeksFast)} tuần (~{formatNum(monthsFast)} tháng)</p>
+                  </div>
+                </div>
+              </div>
+
+              {goalRisky && (
+                <div className="rounded-xl p-3 bg-red-500/10 border border-red-500/30">
+                  <p className="text-sm font-semibold text-red-500">❌ Mục tiêu {formatNum(effectivePct)}% quá cao — cần tư vấn bác sĩ/chuyên gia dinh dưỡng.</p>
+                </div>
+              )}
+              {!goalRisky && goalTooHigh && (
+                <div className="rounded-xl p-3 bg-orange-500/10 border border-orange-500/30">
+                  <p className="text-sm font-semibold text-orange-500">⚠️ Giảm &gt; 15% cần thời gian dài và kế hoạch rõ ràng — đừng vội.</p>
+                </div>
+              )}
+            </>
+          )}
+
+          <ResultBox result={result} formula={formula} onCopy={copy} copied={copied} />
+
+          <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--border)" }}>
+            <div className="px-3 py-2 text-xs font-semibold" style={{ background: "var(--border)", color: "var(--text-muted)" }}>Bảng tham chiếu</div>
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ background: "var(--bg)" }}>
+                  <th className="px-3 py-2 text-left text-xs" style={{ color: "var(--text-muted)" }}>% giảm</th>
+                  <th className="px-3 py-2 text-center text-xs" style={{ color: "var(--text-muted)" }}>An toàn</th>
+                  <th className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>Tốc độ khuyến nghị</th>
+                </tr>
+              </thead>
+              <tbody>
+                {goalRefTable.map((row, i) => (
+                  <tr key={row.pct} style={{ background: i % 2 === 0 ? "var(--card)" : "var(--bg)" }}>
+                    <td className="px-3 py-2 font-semibold">{row.pct}</td>
+                    <td className="px-3 py-2 text-center">{row.safe}</td>
+                    <td className="px-3 py-2 text-right" style={{ color: "var(--text-muted)" }}>{row.time}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+            💡 An toàn: <strong>0.5–1 kg/tuần</strong>. Tổng không quá 5–10% trong 6 tháng để duy trì lâu dài.
+          </p>
+        </>
+      )}
+
+      {mode === "calorie" && (
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <NumInput label="Chiều cao (cm)" value={height} onChange={setHeight} placeholder="VD: 165" suffix="cm" />
+            <NumInput label="Cân nặng (kg)" value={weight} onChange={setWeight} placeholder="VD: 70" suffix="kg" />
+          </div>
+          <NumInput label="Tuổi" value={age} onChange={setAge} placeholder="VD: 28" suffix="tuổi" />
+
+          <div>
+            <p className="text-sm font-medium mb-2" style={{ color: "var(--text-muted)" }}>Mức vận động</p>
+            <div className="grid grid-cols-1 gap-2">
+              {ACTIVITY_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setActivity(opt.value)}
+                  className={`rounded-xl px-3 py-2 text-left transition-all ${activity === opt.value ? "tab-active" : ""}`}
+                  style={activity === opt.value ? {} : { background: "var(--card)", color: "var(--text)", border: "1px solid var(--border)" }}
+                >
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-sm font-semibold">{opt.label}</span>
+                    <span className="text-xs opacity-70">×{opt.value} — {opt.desc}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {!isNaN(tdee) && (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
+                  <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>BMR (chuyển hóa cơ bản)</p>
+                  <p className="font-bold text-sm" style={{ color: "var(--primary)" }}>{formatNum(bmr)} kcal</p>
+                </div>
+                <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
+                  <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>TDEE (calo duy trì)</p>
+                  <p className="font-bold text-sm text-green-500">{formatNum(tdee)} kcal</p>
+                </div>
+              </div>
+
+              <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--border)" }}>
+                <div className="px-3 py-2 text-xs font-semibold" style={{ background: "var(--border)", color: "var(--text-muted)" }}>3 mốc calo để giảm cân</div>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ background: "var(--bg)" }}>
+                      <th className="px-3 py-2 text-left text-xs" style={{ color: "var(--text-muted)" }}>Mức độ</th>
+                      <th className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>Calo/ngày</th>
+                      <th className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>Tốc độ</th>
+                      {!isNaN(lossKg) && <th className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>Đạt mục tiêu</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ background: "var(--card)" }}>
+                      <td className="px-3 py-2 text-green-500 font-medium">Chậm (an toàn)</td>
+                      <td className={`px-3 py-2 text-right font-bold ${cal300 < minCal ? "text-red-500" : ""}`}>{formatNum(cal300)}</td>
+                      <td className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>~0.3 kg/tuần</td>
+                      {!isNaN(lossKg) && <td className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>{formatNum(lossKg / 0.3)} tuần</td>}
+                    </tr>
+                    <tr style={{ background: "var(--bg)" }}>
+                      <td className="px-3 py-2 text-orange-500 font-medium">Trung bình</td>
+                      <td className={`px-3 py-2 text-right font-bold ${cal500 < minCal ? "text-red-500" : ""}`}>{formatNum(cal500)}</td>
+                      <td className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>~0.5 kg/tuần</td>
+                      {!isNaN(lossKg) && <td className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>{formatNum(lossKg / 0.5)} tuần</td>}
+                    </tr>
+                    <tr style={{ background: "var(--card)" }}>
+                      <td className="px-3 py-2 text-red-500 font-medium">Nhanh</td>
+                      <td className={`px-3 py-2 text-right font-bold ${cal750 < minCal ? "text-red-500" : ""}`}>{formatNum(cal750)}</td>
+                      <td className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>~0.7–1 kg/tuần</td>
+                      {!isNaN(lossKg) && <td className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>{formatNum(lossKg / 0.85)} tuần</td>}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {(cal300 < minCal || cal500 < minCal || cal750 < minCal) && (
+                <div className="rounded-xl p-3 bg-red-500/10 border border-red-500/30">
+                  <p className="text-sm font-semibold text-red-500">❌ Một số mức calo &lt; {minCal} kcal — quá thấp cho {sex === "male" ? "nam" : "nữ"}. Đừng ăn dưới ngưỡng này.</p>
+                </div>
+              )}
+            </>
+          )}
+
+          <ResultBox result={result} formula={formula} onCopy={copy} copied={copied} />
+
+          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+            💡 Công thức Mifflin-St Jeor: <strong>Nam: 10×kg + 6.25×cm − 5×tuổi + 5</strong>. <strong>Nữ: −161</strong>. TDEE = BMR × hệ số vận động. 1 kg mỡ ≈ 7700 kcal.
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
 const TAB_COMPONENTS: Record<TabId, React.FC> = {
   "percent-of": TabPercentOf,
   "what-percent": TabWhatPercent,
@@ -978,6 +1359,7 @@ const TAB_COMPONENTS: Record<TabId, React.FC> = {
   "salary-tax": TabSalaryTax,
   "breakeven": TabBreakeven,
   "recipe-scale": TabRecipeScale,
+  "weight-bmi": TabWeightBMI,
 };
 
 // ────────── Shared UI pieces ──────────

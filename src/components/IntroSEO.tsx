@@ -98,6 +98,20 @@ export default function IntroSEO() {
             </p>
           </details>
           <details className="cursor-pointer">
+            <summary className="font-semibold">BMI bao nhiêu là bình thường với người Việt?</summary>
+            <p className="mt-1.5 ml-1" style={{ color: "var(--text-muted)" }}>
+              Theo chuẩn WHO Asia-Pacific (áp dụng cho người châu Á): BMI 18.5–22.9 là bình thường, 23–24.9 là thừa cân, ≥25 là béo phì độ I.
+              Khác với chuẩn toàn cầu (25 mới thừa cân) vì người châu Á có nguy cơ tim mạch cao hơn ở mức BMI thấp hơn.
+            </p>
+          </details>
+          <details className="cursor-pointer">
+            <summary className="font-semibold">Giảm bao nhiêu % cân nặng mỗi tháng là an toàn?</summary>
+            <p className="mt-1.5 ml-1" style={{ color: "var(--text-muted)" }}>
+              An toàn nhất là 0.5–1 kg/tuần (~2–4 kg/tháng, tương đương 0.5–1% cân nặng/tuần). Giảm nhanh hơn 1 kg/tuần dễ mất cơ, ảnh hưởng trao đổi chất.
+              Tổng cộng nên giảm tối đa 5–10% trong 6 tháng để duy trì lâu dài.
+            </p>
+          </details>
+          <details className="cursor-pointer">
             <summary className="font-semibold">Học cách tính phần trăm ở đâu?</summary>
             <p className="mt-1.5 ml-1" style={{ color: "var(--text-muted)" }}>
               Xem chi tiết tại{" "}
