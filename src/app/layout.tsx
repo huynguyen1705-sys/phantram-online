@@ -29,6 +29,10 @@ export const metadata: Metadata = {
     "tính % giảm giá",
     "tính lãi suất",
     "phần trăm online",
+    "tính lương net 2026",
+    "tính thuế TNCN online",
+    "tính lương net sau thuế",
+    "thuế thu nhập cá nhân",
   ],
   authors: [{ name: "phantram.online" }],
   creator: "phantram.online",
@@ -124,6 +128,7 @@ const jsonLdApp = {
     "Tính lãi suất ngân hàng",
     "Tính lãi kép",
     "Tính ROI",
+    "Tính lương Net sau thuế TNCN 2026",
   ],
 };
 

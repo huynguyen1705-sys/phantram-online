@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import BlogSection from "./BlogSection";
 import IntroSEO from "./IntroSEO";
 
-type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound";
+type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound" | "salary-tax";
 
 interface HistoryItem {
   id: number;
@@ -23,6 +23,7 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "tip", label: "Tip & Chia bill", icon: "🍽" },
   { id: "interest", label: "Lãi suất đơn", icon: "💰" },
   { id: "compound", label: "Lãi kép", icon: "📈" },
+  { id: "salary-tax", label: "Lương Net (Thuế TNCN)", icon: "💼" },
 ];
 
 function formatNum(n: number): string {
@@ -492,6 +493,164 @@ function TabCompound() {
   );
 }
 
+// ────────── Tab Tính lương Net sau thuế TNCN ──────────
+function TabSalaryTax() {
+  const [gross, setGross] = useState("");
+  const [dependents, setDependents] = useState("0");
+  const [showDetail, setShowDetail] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const g = parseFloat(gross);
+  const dep = parseInt(dependents) || 0;
+
+  // Cap BHXH/BHYT = 20 × lương cơ sở 2.34M = 46.8M
+  // Cap BHTN = 20 × lương tối thiểu vùng I 4.96M = 99.2M
+  const CAP_BHXH = 46_800_000;
+  const CAP_BHTN = 99_200_000;
+
+  const baseBHXH = !isNaN(g) ? Math.min(g, CAP_BHXH) : 0;
+  const baseBHTN = !isNaN(g) ? Math.min(g, CAP_BHTN) : 0;
+
+  const bhxh = baseBHXH * 0.08;      // 8%
+  const bhyt = baseBHXH * 0.015;     // 1.5%
+  const bhtn = baseBHTN * 0.01;      // 1%
+  const totalInsurance = bhxh + bhyt + bhtn;
+
+  const incomeBeforeTax = !isNaN(g) ? g - totalInsurance : NaN;
+
+  const PERSONAL_DEDUCTION = 11_000_000;
+  const DEPENDENT_DEDUCTION = 4_400_000;
+  const totalDeduction = PERSONAL_DEDUCTION + dep * DEPENDENT_DEDUCTION;
+
+  const taxableIncome = !isNaN(incomeBeforeTax) ? Math.max(0, incomeBeforeTax - totalDeduction) : NaN;
+
+  // Thuế TNCN lũy tiến 7 bậc
+  function calcTNCN(income: number): number {
+    if (income <= 0) return 0;
+    const brackets = [
+      { limit: 5_000_000, rate: 0.05 },
+      { limit: 10_000_000, rate: 0.10 },
+      { limit: 18_000_000, rate: 0.15 },
+      { limit: 32_000_000, rate: 0.20 },
+      { limit: 52_000_000, rate: 0.25 },
+      { limit: 80_000_000, rate: 0.30 },
+      { limit: Infinity, rate: 0.35 },
+    ];
+    let tax = 0;
+    let prev = 0;
+    let remaining = income;
+    for (const b of brackets) {
+      const range = b.limit - prev;
+      const amt = Math.min(remaining, range);
+      tax += amt * b.rate;
+      remaining -= amt;
+      prev = b.limit;
+      if (remaining <= 0) break;
+    }
+    return tax;
+  }
+
+  const tax = !isNaN(taxableIncome) ? calcTNCN(taxableIncome) : NaN;
+  const net = !isNaN(incomeBeforeTax) && !isNaN(tax) ? incomeBeforeTax - tax : NaN;
+  const netPct = !isNaN(net) && g > 0 ? (net / g) * 100 : NaN;
+
+  const result = isNaN(net) ? "" : `${formatNum(net)} ₫/tháng`;
+  const formula = result && !isNaN(netPct)
+    ? `Bạn nhận về ${netPct.toFixed(1)}% lương gross | Thuế TNCN: ${formatNum(tax)} ₫ | BH: ${formatNum(totalInsurance)} ₫`
+    : "";
+  const copy = () => { navigator.clipboard?.writeText(result); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm" style={{ color: "var(--text-muted)" }}>Tính lương NET sau thuế TNCN 2026 (giảm trừ bản thân 11tr, phụ thuộc 4.4tr)</p>
+      <NumInput label="Lương Gross (₫/tháng)" value={gross} onChange={setGross} placeholder="VD: 25000000" />
+      <NumInput label="Số người phụ thuộc" value={dependents} onChange={setDependents} placeholder="VD: 0" />
+      <ResultBox result={result} formula={formula} onCopy={copy} copied={copied} />
+      {!isNaN(net) && (
+        <>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
+              <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Gross</p>
+              <p className="font-bold text-sm" style={{ color: "var(--text)" }}>{formatNum(g)} ₫</p>
+            </div>
+            <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
+              <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Thuế + BH</p>
+              <p className="font-bold text-sm text-red-400">{formatNum(tax + totalInsurance)} ₫</p>
+            </div>
+            <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
+              <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>NET</p>
+              <p className="font-bold text-sm text-green-500">{formatNum(net)} ₫</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowDetail(s => !s)}
+            className="rounded-xl py-2 text-sm font-semibold transition-all active:scale-95"
+            style={{ background: "var(--border)", color: "var(--text)" }}
+          >
+            {showDetail ? "▲ Ẩn chi tiết" : "📊 Hiện chi tiết tính toán"}
+          </button>
+          {showDetail && (
+            <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--border)" }}>
+              <div className="px-3 py-2 text-xs font-semibold" style={{ background: "var(--border)", color: "var(--text-muted)" }}>Chi tiết tính lương NET</div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr style={{ background: "var(--card)" }}>
+                      <td className="px-3 py-2" style={{ color: "var(--text-muted)" }}>Lương Gross</td>
+                      <td className="px-3 py-2 text-right font-semibold" style={{ color: "var(--text)" }}>{formatNum(g)} ₫</td>
+                    </tr>
+                    <tr style={{ background: "var(--bg)" }}>
+                      <td className="px-3 py-2" style={{ color: "var(--text-muted)" }}>BHXH (8%)</td>
+                      <td className="px-3 py-2 text-right text-red-400">− {formatNum(bhxh)} ₫</td>
+                    </tr>
+                    <tr style={{ background: "var(--card)" }}>
+                      <td className="px-3 py-2" style={{ color: "var(--text-muted)" }}>BHYT (1.5%)</td>
+                      <td className="px-3 py-2 text-right text-red-400">− {formatNum(bhyt)} ₫</td>
+                    </tr>
+                    <tr style={{ background: "var(--bg)" }}>
+                      <td className="px-3 py-2" style={{ color: "var(--text-muted)" }}>BHTN (1%)</td>
+                      <td className="px-3 py-2 text-right text-red-400">− {formatNum(bhtn)} ₫</td>
+                    </tr>
+                    <tr style={{ background: "var(--card)" }}>
+                      <td className="px-3 py-2 font-semibold" style={{ color: "var(--text)" }}>Thu nhập trước thuế</td>
+                      <td className="px-3 py-2 text-right font-semibold" style={{ color: "var(--text)" }}>{formatNum(incomeBeforeTax)} ₫</td>
+                    </tr>
+                    <tr style={{ background: "var(--bg)" }}>
+                      <td className="px-3 py-2" style={{ color: "var(--text-muted)" }}>Giảm trừ bản thân</td>
+                      <td className="px-3 py-2 text-right" style={{ color: "var(--text-muted)" }}>− {formatNum(PERSONAL_DEDUCTION)} ₫</td>
+                    </tr>
+                    {dep > 0 && (
+                      <tr style={{ background: "var(--card)" }}>
+                        <td className="px-3 py-2" style={{ color: "var(--text-muted)" }}>Giảm trừ {dep} phụ thuộc</td>
+                        <td className="px-3 py-2 text-right" style={{ color: "var(--text-muted)" }}>− {formatNum(dep * DEPENDENT_DEDUCTION)} ₫</td>
+                      </tr>
+                    )}
+                    <tr style={{ background: "var(--bg)" }}>
+                      <td className="px-3 py-2 font-semibold" style={{ color: "var(--text)" }}>Thu nhập chịu thuế</td>
+                      <td className="px-3 py-2 text-right font-semibold" style={{ color: "var(--text)" }}>{formatNum(taxableIncome)} ₫</td>
+                    </tr>
+                    <tr style={{ background: "var(--card)" }}>
+                      <td className="px-3 py-2" style={{ color: "var(--text-muted)" }}>Thuế TNCN (lũy tiến)</td>
+                      <td className="px-3 py-2 text-right text-red-400 font-semibold">− {formatNum(tax)} ₫</td>
+                    </tr>
+                    <tr style={{ background: "#dcfce7" }}>
+                      <td className="px-3 py-2 font-bold" style={{ color: "#166534" }}>Lương NET</td>
+                      <td className="px-3 py-2 text-right font-bold" style={{ color: "#166534" }}>{formatNum(net)} ₫</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="px-3 py-2 text-xs" style={{ background: "var(--border)", color: "var(--text-muted)" }}>
+                * Áp dụng cap BHXH/BHYT 46.8M & BHTN 99.2M (lương cơ sở 2.34M, tối thiểu vùng I 4.96M). Thuế lũy tiến 7 bậc theo Luật Thuế TNCN.
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 const TAB_COMPONENTS: Record<TabId, React.FC> = {
   "percent-of": TabPercentOf,
   "what-percent": TabWhatPercent,
@@ -503,6 +662,7 @@ const TAB_COMPONENTS: Record<TabId, React.FC> = {
   "tip": TabTip,
   "interest": TabInterest,
   "compound": TabCompound,
+  "salary-tax": TabSalaryTax,
 };
 
 export default function Calculator() {
