@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import BlogSection from "./BlogSection";
 import IntroSEO from "./IntroSEO";
 
-type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound" | "salary-tax" | "breakeven";
+type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound" | "salary-tax" | "breakeven" | "recipe-scale";
 
 interface HistoryItem {
   id: number;
@@ -25,12 +25,14 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "compound", label: "Lãi kép", icon: "📈" },
   { id: "salary-tax", label: "Lương Net (Thuế TNCN)", icon: "💼" },
   { id: "breakeven", label: "Hoàn vốn / Break-even", icon: "📉" },
+  { id: "recipe-scale", label: "Scale công thức", icon: "🍳" },
 ];
 
 const TAB_GROUPS: { id: string; label: string; icon: string; tabs: TabId[] }[] = [
   { id: "basic", label: "Cơ bản", icon: "🧮", tabs: ["percent-of", "what-percent", "change", "increase-decrease", "find-base"] },
   { id: "finance", label: "Tài chính", icon: "💰", tabs: ["interest", "compound", "salary-tax", "breakeven"] },
   { id: "shopping", label: "Mua sắm", icon: "🛒", tabs: ["discount", "compare", "tip"] },
+  { id: "daily", label: "Tiện ích", icon: "🛠", tabs: ["recipe-scale"] },
 ];
 
 function formatNum(n: number): string {
@@ -809,6 +811,159 @@ function TabBreakeven() {
   );
 }
 
+type Ingredient = { id: string; name: string; amount: string; unit: string };
+const UNITS = ["g", "kg", "ml", "L", "cup", "tbsp", "tsp", "quả", "củ", "lá", "miếng", "gói"];
+const WHOLE_UNITS = ["quả", "củ", "lá", "miếng", "gói"];
+function isWholeUnit(u: string) { return WHOLE_UNITS.includes(u); }
+function scaleAmount(amount: number, scale: number, unit: string): number {
+  if (isWholeUnit(unit)) return Math.ceil(amount * scale);
+  return Math.round(amount * scale * 10) / 10;
+}
+
+function TabRecipeScale() {
+  const [from, setFrom] = useState("4");
+  const [to, setTo] = useState("");
+  const [ingredients, setIngredients] = useState<Ingredient[]>([
+    { id: "1", name: "", amount: "", unit: "g" },
+    { id: "2", name: "", amount: "", unit: "g" },
+    { id: "3", name: "", amount: "", unit: "g" },
+  ]);
+  const [copied, setCopied] = useState(false);
+
+  const fromN = parseFloat(from);
+  const toN = parseFloat(to);
+  const scale = !isNaN(fromN) && fromN > 0 && !isNaN(toN) && toN > 0 ? toN / fromN : NaN;
+  const scalePct = !isNaN(scale) ? (scale - 1) * 100 : NaN;
+
+  const addIngredient = () => {
+    setIngredients(prev => [...prev, { id: Date.now().toString() + Math.random().toString(36).slice(2, 6), name: "", amount: "", unit: "g" }]);
+  };
+  const removeIngredient = (id: string) => {
+    setIngredients(prev => prev.length > 1 ? prev.filter(i => i.id !== id) : prev);
+  };
+  const updateIngredient = (id: string, field: keyof Ingredient, value: string) => {
+    setIngredients(prev => prev.map(i => i.id === id ? { ...i, [field]: value } : i));
+  };
+  const applyPreset = (factor: number) => {
+    const base = parseFloat(from);
+    if (!isNaN(base) && base > 0) setTo(String(Math.round(base * factor * 100) / 100));
+  };
+
+  const scaled = ingredients
+    .map(ing => {
+      const amt = parseFloat(ing.amount);
+      if (!ing.name.trim() || isNaN(amt) || isNaN(scale)) return null;
+      return { name: ing.name, original: amt, unit: ing.unit, newAmount: scaleAmount(amt, scale, ing.unit) };
+    })
+    .filter((x): x is { name: string; original: number; unit: string; newAmount: number } => x !== null);
+
+  const copyList = () => {
+    if (scaled.length === 0) return;
+    const text = scaled.map(s => `${s.name}: ${s.newAmount}${s.unit === "quả" || s.unit === "củ" || s.unit === "lá" || s.unit === "miếng" || s.unit === "gói" ? " " + s.unit : s.unit}`).join("\n");
+    navigator.clipboard?.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm" style={{ color: "var(--text-muted)" }}>Scale công thức nấu ăn / pha chế theo số phần ăn mới. Tự động nhân mọi nguyên liệu.</p>
+
+      <div className="grid grid-cols-2 gap-3">
+        <NumInput label="Phần ăn gốc" value={from} onChange={setFrom} placeholder="VD: 4" />
+        <NumInput label="Muốn nấu cho" value={to} onChange={setTo} placeholder="VD: 7" />
+      </div>
+
+      {!isNaN(scale) && (
+        <div className="rounded-xl px-4 py-3 text-center font-semibold" style={{ background: "var(--result-bg)", color: scale >= 1 ? "#22c55e" : "#f97316" }}>
+          Hệ số scale: ×{formatNum(scale)} ({scalePct >= 0 ? "+" : ""}{formatNum(scalePct)}%)
+        </div>
+      )}
+
+      <div className="grid grid-cols-4 gap-2">
+        <button onClick={() => applyPreset(0.5)} className="rounded-xl py-2 text-xs font-semibold transition-all active:scale-95" style={{ background: "var(--border)", color: "var(--text)" }}>Nửa (÷2)</button>
+        <button onClick={() => applyPreset(2)} className="rounded-xl py-2 text-xs font-semibold transition-all active:scale-95" style={{ background: "var(--border)", color: "var(--text)" }}>Gấp đôi</button>
+        <button onClick={() => applyPreset(3)} className="rounded-xl py-2 text-xs font-semibold transition-all active:scale-95" style={{ background: "var(--border)", color: "var(--text)" }}>Gấp 3</button>
+        <button onClick={() => applyPreset(4)} className="rounded-xl py-2 text-xs font-semibold transition-all active:scale-95" style={{ background: "var(--border)", color: "var(--text)" }}>Gấp 4</button>
+      </div>
+
+      <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--border)" }}>
+        <div className="px-3 py-2 text-xs font-semibold" style={{ background: "var(--border)", color: "var(--text-muted)" }}>Nguyên liệu gốc</div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ background: "var(--bg)" }}>
+                <th className="px-2 py-2 text-left text-xs" style={{ color: "var(--text-muted)" }}>Tên</th>
+                <th className="px-2 py-2 text-left text-xs" style={{ color: "var(--text-muted)" }}>SL</th>
+                <th className="px-2 py-2 text-left text-xs" style={{ color: "var(--text-muted)" }}>Đơn vị</th>
+                <th className="px-2 py-2" style={{ width: 36 }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {ingredients.map((ing, i) => (
+                <tr key={ing.id} style={{ background: i % 2 === 0 ? "var(--card)" : "var(--bg)" }}>
+                  <td className="px-2 py-1.5">
+                    <input type="text" value={ing.name} onChange={e => updateIngredient(ing.id, "name", e.target.value)} placeholder="Bột mì" className="w-full rounded-lg border px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-400" style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }} />
+                  </td>
+                  <td className="px-2 py-1.5">
+                    <input type="number" inputMode="decimal" value={ing.amount} onChange={e => updateIngredient(ing.id, "amount", e.target.value)} placeholder="0" className="w-20 rounded-lg border px-2 py-1.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-400" style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }} />
+                  </td>
+                  <td className="px-2 py-1.5">
+                    <select value={ing.unit} onChange={e => updateIngredient(ing.id, "unit", e.target.value)} className="rounded-lg border px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-400" style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }}>
+                      {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    <button onClick={() => removeIngredient(ing.id)} className="text-red-400 hover:text-red-500 text-lg font-bold w-7 h-7 rounded-lg transition-all active:scale-90" aria-label="Xóa">✕</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <button onClick={addIngredient} className="w-full px-3 py-2.5 text-sm font-semibold transition-all hover:opacity-80" style={{ background: "var(--bg)", color: "var(--primary)", borderTop: "1px solid var(--border)" }}>+ Thêm nguyên liệu</button>
+      </div>
+
+      {scaled.length > 0 && (
+        <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--border)" }}>
+          <div className="flex items-center justify-between px-3 py-2" style={{ background: "var(--border)" }}>
+            <span className="text-xs font-semibold" style={{ color: "var(--text-muted)" }}>Sau khi scale</span>
+            <button onClick={copyList} className="rounded-lg px-3 py-1 text-xs font-semibold transition-all active:scale-95" style={{ background: copied ? "#22c55e" : "var(--primary)", color: "#fff" }}>
+              {copied ? "✓ Đã copy" : "📋 Copy danh sách"}
+            </button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ background: "var(--bg)" }}>
+                  <th className="px-3 py-2 text-left text-xs" style={{ color: "var(--text-muted)" }}>Tên</th>
+                  <th className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>Gốc</th>
+                  <th className="px-2 py-2 text-center text-xs" style={{ color: "var(--text-muted)" }}>→</th>
+                  <th className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>Mới</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scaled.map((s, i) => (
+                  <tr key={i} style={{ background: i % 2 === 0 ? "var(--card)" : "var(--bg)" }}>
+                    <td className="px-3 py-2 font-medium">{s.name}</td>
+                    <td className="px-3 py-2 text-right" style={{ color: "var(--text-muted)" }}>{formatNum(s.original)} {s.unit}</td>
+                    <td className="px-2 py-2 text-center" style={{ color: "var(--text-muted)" }}>→</td>
+                    <td className="px-3 py-2 text-right text-lg font-bold" style={{ color: "var(--primary)" }}>{formatNum(s.newAmount)} {s.unit}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+        💡 Mẹo: Nguyên liệu có đơn vị nguyên (quả, củ, lá, miếng, gói) sẽ được làm tròn lên gần nhất. Các đơn vị khác (g, ml, kg, L, cup…) giữ 1 chữ số thập phân.
+      </p>
+    </div>
+  );
+}
+
 const TAB_COMPONENTS: Record<TabId, React.FC> = {
   "percent-of": TabPercentOf,
   "what-percent": TabWhatPercent,
@@ -822,6 +977,7 @@ const TAB_COMPONENTS: Record<TabId, React.FC> = {
   "compound": TabCompound,
   "salary-tax": TabSalaryTax,
   "breakeven": TabBreakeven,
+  "recipe-scale": TabRecipeScale,
 };
 
 // ────────── Shared UI pieces ──────────

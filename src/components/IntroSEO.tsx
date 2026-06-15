@@ -91,6 +91,13 @@ export default function IntroSEO() {
             </p>
           </details>
           <details className="cursor-pointer">
+            <summary className="font-semibold">Cách scale công thức nấu ăn cho nhiều người hơn?</summary>
+            <p className="mt-1.5 ml-1" style={{ color: "var(--text-muted)" }}>
+              Dùng hệ số tỉ lệ = số người mới / số người gốc. Ví dụ công thức cho 4 người muốn nấu cho 7 người: hệ số 1.75.
+              Nhân hệ số này với mọi nguyên liệu. Với nguyên liệu đơn vị nguyên (quả trứng, củ hành) nên làm tròn lên.
+            </p>
+          </details>
+          <details className="cursor-pointer">
             <summary className="font-semibold">Học cách tính phần trăm ở đâu?</summary>
             <p className="mt-1.5 ml-1" style={{ color: "var(--text-muted)" }}>
               Xem chi tiết tại{" "}
