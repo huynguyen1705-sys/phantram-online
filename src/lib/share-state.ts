@@ -6,7 +6,8 @@ export type ShareableTabId =
   | "salary-tax"
   | "compound"
   | "discount"
-  | "breakeven";
+  | "breakeven"
+  | "tip";
 
 export const SHAREABLE_TAB_URL: Record<ShareableTabId, string> = {
   "weight-bmi": "/bmi",
@@ -14,6 +15,7 @@ export const SHAREABLE_TAB_URL: Record<ShareableTabId, string> = {
   "compound": "/lai-kep",
   "discount": "/tinh-giam-gia",
   "breakeven": "/break-even",
+  "tip": "/chia-bill-tip",
 };
 
 export const SITE_ORIGIN = "https://phantram.online";
@@ -65,12 +67,31 @@ export type ShareStateBreakeven = {
   monthlyProfit?: string;
 };
 
+export type ShareStateTip = {
+  tab: "tip";
+  mode: "equal" | "byItem" | "custom";
+  // Mode equal
+  total?: string;
+  n?: string;       // số người
+  tip?: string;     // tip %
+  vat?: string;     // vat %
+  tipOnVat?: "1" | "0";
+  // Mode byItem & custom: compact encoded payload
+  // p = pipe-separated names, e.g. "An|Binh|Chi"
+  // d = pipe-separated dishes: "name:price:idxList" where idxList = comma indices, e.g. "Bia:200000:0,1|Coca:50000:2"
+  // r = pipe-separated custom ratios (%) aligned with p: "50|25|25"
+  p?: string;
+  d?: string;
+  r?: string;
+};
+
 export type ShareState =
   | ShareStateBMI
   | ShareStateSalaryTax
   | ShareStateCompound
   | ShareStateDiscount
-  | ShareStateBreakeven;
+  | ShareStateBreakeven
+  | ShareStateTip;
 
 // ───────── Encoders ─────────
 
@@ -116,6 +137,17 @@ export function encodeShareState(s: ShareState): string {
       setIf(p, "c", s.capital);
       setIf(p, "mp", s.monthlyProfit);
       break;
+    case "tip":
+      p.set("m", s.mode);
+      setIf(p, "t", s.total);
+      setIf(p, "n", s.n);
+      setIf(p, "tip", s.tip);
+      setIf(p, "vat", s.vat);
+      if (s.tipOnVat) p.set("tov", s.tipOnVat);
+      setIf(p, "p", s.p);
+      setIf(p, "d", s.d);
+      setIf(p, "r", s.r);
+      break;
   }
   return p.toString();
 }
@@ -127,6 +159,7 @@ export type DecodedSalaryTax = Partial<Omit<ShareStateSalaryTax, "tab">>;
 export type DecodedCompound = Partial<Omit<ShareStateCompound, "tab">>;
 export type DecodedDiscount = Partial<Omit<ShareStateDiscount, "tab">>;
 export type DecodedBreakeven = Partial<Omit<ShareStateBreakeven, "tab">>;
+export type DecodedTip = Partial<Omit<ShareStateTip, "tab">>;
 
 function getStr(p: URLSearchParams, k: string): string | undefined {
   const v = p.get(k);
@@ -187,6 +220,22 @@ export function decodeBreakeven(p: URLSearchParams): DecodedBreakeven {
   out.vc = getStr(p, "vc");
   out.capital = getStr(p, "c");
   out.monthlyProfit = getStr(p, "mp");
+  return out;
+}
+
+export function decodeTip(p: URLSearchParams): DecodedTip {
+  const out: DecodedTip = {};
+  const m = p.get("m");
+  if (m === "equal" || m === "byItem" || m === "custom") out.mode = m;
+  out.total = getStr(p, "t");
+  out.n = getStr(p, "n");
+  out.tip = getStr(p, "tip");
+  out.vat = getStr(p, "vat");
+  const tov = p.get("tov");
+  if (tov === "1" || tov === "0") out.tipOnVat = tov;
+  out.p = getStr(p, "p");
+  out.d = getStr(p, "d");
+  out.r = getStr(p, "r");
   return out;
 }
 

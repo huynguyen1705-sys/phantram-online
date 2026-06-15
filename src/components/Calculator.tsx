@@ -13,11 +13,13 @@ import {
   decodeCompound,
   decodeDiscount,
   decodeBreakeven,
+  decodeTip,
   type DecodedBMI,
   type DecodedSalaryTax,
   type DecodedCompound,
   type DecodedDiscount,
   type DecodedBreakeven,
+  type DecodedTip,
 } from "@/lib/share-state";
 
 function ShareButton({ onClick }: { onClick: () => void }) {
@@ -322,31 +324,588 @@ function TabCompare() {
   );
 }
 
-function TabTip() {
-  const [bill, setBill] = useState(""); const [tipPct, setTipPct] = useState("10"); const [people, setPeople] = useState("2"); const [copied, setCopied] = useState(false);
-  const billNum = parseFloat(bill); const tipNum = parseFloat(tipPct); const peopleNum = parseInt(people) || 1;
-  const tipAmt = bill !== "" ? billNum * tipNum / 100 : NaN;
-  const total = !isNaN(tipAmt) ? billNum + tipAmt : NaN;
-  const perPerson = !isNaN(total) ? total / peopleNum : NaN;
-  const result = isNaN(perPerson) ? "" : `${formatNum(perPerson)} ₫/người`;
-  const formula = result ? `Tip: ${formatNum(tipAmt)} ₫ | Tổng: ${formatNum(total)} ₫` : "";
-  const copy = () => { navigator.clipboard?.writeText(result); setCopied(true); setTimeout(() => setCopied(false), 2000); };
-  const TIP_PRESETS = ["5", "10", "15", "20"];
+// ───────── TabTip: 3 modes ─────────
+type TipPerson = { id: string; name: string };
+type TipDish = { id: string; name: string; price: string; sharedBy: string[] };
+
+const TIP_PRESETS = ["0", "5", "10", "15", "20"];
+const VAT_PRESETS = ["0", "8", "10"];
+
+function shortId(): string {
+  return Math.random().toString(36).slice(2, 8);
+}
+
+function encodePeople(people: TipPerson[]): string {
+  return people.map(p => p.name.replaceAll("|", "/").replaceAll(":", "-")).join("|");
+}
+function encodeDishes(dishes: TipDish[], people: TipPerson[]): string {
+  return dishes.map(d => {
+    const idxList = d.sharedBy.map(pid => people.findIndex(p => p.id === pid)).filter(i => i >= 0).join(",");
+    return `${d.name.replaceAll("|", "/").replaceAll(":", "-")}:${d.price || "0"}:${idxList}`;
+  }).join("|");
+}
+function decodePeople(s: string | undefined): TipPerson[] | null {
+  if (!s) return null;
+  return s.split("|").map(name => ({ id: shortId(), name }));
+}
+function decodeDishes(s: string | undefined, people: TipPerson[]): TipDish[] | null {
+  if (!s) return null;
+  return s.split("|").map(raw => {
+    const parts = raw.split(":");
+    const name = parts[0] ?? "";
+    const price = parts[1] ?? "";
+    const idxList = (parts[2] ?? "").split(",").map(x => parseInt(x)).filter(n => !isNaN(n) && n >= 0 && n < people.length);
+    return { id: shortId(), name, price, sharedBy: idxList.map(i => people[i].id) };
+  });
+}
+
+function formatVND(n: number): string {
+  if (isNaN(n) || !isFinite(n)) return "—";
+  return Math.round(n).toLocaleString("vi-VN") + " ₫";
+}
+
+function TabTip({ initial }: { initial?: DecodedTip } = {}) {
+  const [mode, setMode] = useState<"equal" | "byItem" | "custom">(initial?.mode ?? "equal");
+  const [copied, setCopied] = useState(false);
+  const [tableCopied, setTableCopied] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+
+  // Common: VAT + Tip + tipOnVat
+  const [vatPct, setVatPct] = useState(initial?.vat ?? "8");
+  const [tipPct, setTipPct] = useState(initial?.tip ?? "0");
+  const [tipOnVat, setTipOnVat] = useState<boolean>(initial?.tipOnVat ? initial.tipOnVat === "1" : true);
+
+  // Mode A — equal
+  const [bill, setBill] = useState(initial?.total ?? "");
+  const [people, setPeople] = useState(initial?.n ?? "2");
+
+  // Mode B — byItem (people list + dishes)
+  const initialPeopleB = useMemo(() => {
+    if (initial?.mode === "byItem" && initial.p) {
+      const arr = decodePeople(initial.p);
+      if (arr && arr.length) return arr;
+    }
+    return [
+      { id: shortId(), name: "Người 1" },
+      { id: shortId(), name: "Người 2" },
+      { id: shortId(), name: "Người 3" },
+    ];
+  }, [initial]);
+  const [bPeople, setBPeople] = useState<TipPerson[]>(initialPeopleB);
+  const initialDishes = useMemo(() => {
+    if (initial?.mode === "byItem" && initial.d && initialPeopleB.length) {
+      const arr = decodeDishes(initial.d, initialPeopleB);
+      if (arr && arr.length) return arr;
+    }
+    return [{ id: shortId(), name: "Món 1", price: "", sharedBy: initialPeopleB.map(p => p.id) }];
+  }, [initial, initialPeopleB]);
+  const [dishes, setDishes] = useState<TipDish[]>(initialDishes);
+
+  // Mode C — custom %
+  const initialPeopleC = useMemo(() => {
+    if (initial?.mode === "custom" && initial.p) {
+      const arr = decodePeople(initial.p);
+      if (arr && arr.length) return arr;
+    }
+    return [
+      { id: shortId(), name: "Người 1" },
+      { id: shortId(), name: "Người 2" },
+      { id: shortId(), name: "Người 3" },
+    ];
+  }, [initial]);
+  const [cPeople, setCPeople] = useState<TipPerson[]>(initialPeopleC);
+  const initialRatios = useMemo(() => {
+    const out: Record<string, string> = {};
+    if (initial?.mode === "custom" && initial.r) {
+      const parts = initial.r.split("|");
+      initialPeopleC.forEach((p, i) => { out[p.id] = parts[i] ?? ""; });
+    } else {
+      const ev = (100 / initialPeopleC.length).toFixed(2).replace(/\.?0+$/, "");
+      initialPeopleC.forEach(p => { out[p.id] = ev; });
+    }
+    return out;
+  }, [initial, initialPeopleC]);
+  const [ratios, setRatios] = useState<Record<string, string>>(initialRatios);
+  const [cBill, setCBill] = useState(initial?.mode === "custom" && initial.total ? initial.total : "");
+
+  // Common compute helpers
+  const vatN = parseFloat(vatPct) || 0;
+  const tipN = parseFloat(tipPct) || 0;
+
+  // ───── Mode A compute ─────
+  const aBillN = parseFloat(bill);
+  const aPeopleN = Math.max(1, parseInt(people) || 1);
+  const aHasBill = bill !== "" && !isNaN(aBillN) && aBillN > 0;
+  const aVatAmt = aHasBill ? aBillN * vatN / 100 : NaN;
+  const aTipBase = tipOnVat ? aBillN + aVatAmt : aBillN;
+  const aTipAmt = aHasBill ? aTipBase * tipN / 100 : NaN;
+  const aTotal = aHasBill ? aBillN + aVatAmt + aTipAmt : NaN;
+  const aPerPerson = aHasBill ? aTotal / aPeopleN : NaN;
+
+  // ───── Mode B compute ─────
+  const bPerPerson = useMemo(() => {
+    const sub: Record<string, number> = {};
+    bPeople.forEach(p => { sub[p.id] = 0; });
+    let foodTotal = 0;
+    for (const d of dishes) {
+      const price = parseFloat(d.price);
+      if (isNaN(price) || price <= 0 || d.sharedBy.length === 0) continue;
+      foodTotal += price;
+      const each = price / d.sharedBy.length;
+      for (const pid of d.sharedBy) {
+        if (sub[pid] !== undefined) sub[pid] += each;
+      }
+    }
+    const rows = bPeople.map(p => {
+      const food = sub[p.id] || 0;
+      const ratio = foodTotal > 0 ? food / foodTotal : 0;
+      const vatAmt = food * vatN / 100;
+      const tipBaseLocal = tipOnVat ? food + vatAmt : food;
+      const tipAmt = tipBaseLocal * tipN / 100;
+      const totalPay = food + vatAmt + tipAmt;
+      return { id: p.id, name: p.name, food, vat: vatAmt, tip: tipAmt, total: totalPay, ratio };
+    });
+    return { rows, foodTotal };
+  }, [bPeople, dishes, vatN, tipN, tipOnVat]);
+  const bGrandTotal = bPerPerson.rows.reduce((s, r) => s + r.total, 0);
+  const bGrandVat = bPerPerson.rows.reduce((s, r) => s + r.vat, 0);
+  const bGrandTip = bPerPerson.rows.reduce((s, r) => s + r.tip, 0);
+  const bMaxTotal = Math.max(...bPerPerson.rows.map(r => r.total), 0);
+  const bHasData = bPerPerson.foodTotal > 0;
+
+  // ───── Mode C compute ─────
+  const cBillN = parseFloat(cBill);
+  const cHasBill = cBill !== "" && !isNaN(cBillN) && cBillN > 0;
+  const cVatAmt = cHasBill ? cBillN * vatN / 100 : 0;
+  const cTipBase = tipOnVat ? cBillN + cVatAmt : cBillN;
+  const cTipAmt = cHasBill ? cTipBase * tipN / 100 : 0;
+  const cTotal = cHasBill ? cBillN + cVatAmt + cTipAmt : NaN;
+  const cSumRatio = cPeople.reduce((s, p) => s + (parseFloat(ratios[p.id] || "0") || 0), 0);
+  const cRatioOk = Math.abs(cSumRatio - 100) < 0.01;
+  const cRows = cPeople.map(p => {
+    const r = parseFloat(ratios[p.id] || "0") || 0;
+    const pay = cHasBill && cRatioOk ? cTotal * r / 100 : NaN;
+    return { id: p.id, name: p.name, ratio: r, pay };
+  });
+
+  // ───── People/Dish editors ─────
+  const addPersonB = () => {
+    const newP = { id: shortId(), name: `Người ${bPeople.length + 1}` };
+    setBPeople(arr => [...arr, newP]);
+    // Mặc định người mới ăn món hiện có? Để false để tránh thay đổi data
+  };
+  const removePersonB = (id: string) => {
+    if (bPeople.length <= 1) return;
+    setBPeople(arr => arr.filter(p => p.id !== id));
+    setDishes(arr => arr.map(d => ({ ...d, sharedBy: d.sharedBy.filter(pid => pid !== id) })));
+  };
+  const renamePersonB = (id: string, name: string) => setBPeople(arr => arr.map(p => p.id === id ? { ...p, name } : p));
+
+  const addDish = () => {
+    setDishes(arr => [...arr, { id: shortId(), name: `Món ${arr.length + 1}`, price: "", sharedBy: bPeople.map(p => p.id) }]);
+  };
+  const removeDish = (id: string) => setDishes(arr => arr.filter(d => d.id !== id));
+  const updateDish = (id: string, patch: Partial<TipDish>) => setDishes(arr => arr.map(d => d.id === id ? { ...d, ...patch } : d));
+  const toggleDishPerson = (dishId: string, pid: string) => {
+    setDishes(arr => arr.map(d => {
+      if (d.id !== dishId) return d;
+      const has = d.sharedBy.includes(pid);
+      return { ...d, sharedBy: has ? d.sharedBy.filter(x => x !== pid) : [...d.sharedBy, pid] };
+    }));
+  };
+
+  const addPersonC = () => {
+    const newP = { id: shortId(), name: `Người ${cPeople.length + 1}` };
+    setCPeople(arr => [...arr, newP]);
+    setRatios(r => ({ ...r, [newP.id]: "" }));
+  };
+  const removePersonC = (id: string) => {
+    if (cPeople.length <= 1) return;
+    setCPeople(arr => arr.filter(p => p.id !== id));
+    setRatios(r => { const next = { ...r }; delete next[id]; return next; });
+  };
+  const renamePersonC = (id: string, name: string) => setCPeople(arr => arr.map(p => p.id === id ? { ...p, name } : p));
+  const setRatio = (id: string, val: string) => setRatios(r => ({ ...r, [id]: val }));
+  const fillEvenly = () => {
+    if (cPeople.length === 0) return;
+    const ev = (100 / cPeople.length).toFixed(2).replace(/\.?0+$/, "");
+    const next: Record<string, string> = {};
+    cPeople.forEach(p => { next[p.id] = ev; });
+    setRatios(next);
+  };
+
+  // ───── Copy/Share text builder ─────
+  let displayResult = "";
+  let displaySub = "";
+  let shareText = "";
+  let shareTitle = "Chia bill nhóm";
+  const buildHeader = () => `🧾 Chia bill phantram.online\n─────────────────`;
+  const buildFooter = () => `─────────────────\n(VAT ${vatN}% + Tip ${tipN}%${tipOnVat ? " sau VAT" : " trước VAT"})`;
+
+  if (mode === "equal" && aHasBill) {
+    displayResult = `${formatVND(aPerPerson)} / người`;
+    displaySub = `Tổng: ${formatVND(aTotal)} · VAT ${formatVND(aVatAmt)} · Tip ${formatVND(aTipAmt)}`;
+    shareTitle = "Chia bill chia đều";
+    shareText = `${buildHeader()}\nMỗi người: ${formatVND(aPerPerson)} × ${aPeopleN} người\n─────────────────\nMón gốc: ${formatVND(aBillN)}\nVAT ${vatN}%: ${formatVND(aVatAmt)}\nTip ${tipN}%: ${formatVND(aTipAmt)}\nTổng: ${formatVND(aTotal)}\n${buildFooter()}`;
+  } else if (mode === "byItem" && bHasData) {
+    displayResult = `Tổng: ${formatVND(bGrandTotal)}`;
+    displaySub = `${bPeople.length} người · ${dishes.length} món · VAT ${formatVND(bGrandVat)} · Tip ${formatVND(bGrandTip)}`;
+    shareTitle = "Chia bill theo món";
+    const lines = bPerPerson.rows.map(r => `${r.name}: ${formatVND(r.total)}${r.total === bMaxTotal && bMaxTotal > 0 ? " 🏆" : ""}`).join("\n");
+    shareText = `${buildHeader()}\n${lines}\n─────────────────\nTổng: ${formatVND(bGrandTotal)}\n${buildFooter()}`;
+  } else if (mode === "custom" && cHasBill && cRatioOk) {
+    displayResult = `Tổng: ${formatVND(cTotal)}`;
+    displaySub = `${cPeople.length} người · tỉ lệ tùy ý`;
+    shareTitle = "Chia bill theo %";
+    const lines = cRows.map(r => `${r.name} (${r.ratio}%): ${isNaN(r.pay) ? "—" : formatVND(r.pay)}`).join("\n");
+    shareText = `${buildHeader()}\n${lines}\n─────────────────\nTổng: ${formatVND(cTotal)}\n${buildFooter()}`;
+  }
+  const formula = displaySub;
+  const copyResult = () => {
+    if (!displayResult) return;
+    navigator.clipboard?.writeText(displayResult);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  const copyTable = () => {
+    if (!shareText) return;
+    navigator.clipboard?.writeText(shareText);
+    setTableCopied(true);
+    setTimeout(() => setTableCopied(false), 2000);
+  };
+
+  // ───── Share payload ─────
+  const hasShareData =
+    (mode === "equal" && aHasBill) ||
+    (mode === "byItem" && bHasData) ||
+    (mode === "custom" && cHasBill && cRatioOk);
+  const sharePayload = useMemo(() => {
+    if (!hasShareData) return null;
+    if (mode === "equal") {
+      return {
+        tab: "tip" as const,
+        mode,
+        total: bill,
+        n: people,
+        tip: tipPct,
+        vat: vatPct,
+        tipOnVat: (tipOnVat ? "1" : "0") as "1" | "0",
+      };
+    }
+    if (mode === "byItem") {
+      return {
+        tab: "tip" as const,
+        mode,
+        n: String(bPeople.length),
+        total: String(Math.round(bGrandTotal)),
+        tip: tipPct,
+        vat: vatPct,
+        tipOnVat: (tipOnVat ? "1" : "0") as "1" | "0",
+        p: encodePeople(bPeople),
+        d: encodeDishes(dishes, bPeople),
+      };
+    }
+    return {
+      tab: "tip" as const,
+      mode,
+      total: cBill,
+      n: String(cPeople.length),
+      tip: tipPct,
+      vat: vatPct,
+      tipOnVat: (tipOnVat ? "1" : "0") as "1" | "0",
+      p: encodePeople(cPeople),
+      r: cPeople.map(p => ratios[p.id] || "").join("|"),
+    };
+  }, [hasShareData, mode, bill, people, tipPct, vatPct, tipOnVat, bPeople, dishes, bGrandTotal, cBill, cPeople, ratios]);
+  const shareUrl = sharePayload ? buildShareUrl(sharePayload) : "";
+  const ogImageUrl = sharePayload ? buildOgImageUrl(sharePayload) : "";
+
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm" style={{ color: "var(--text-muted)" }}>Tính tip nhà hàng & chia bill</p>
-      <NumInput label="Tổng bill (₫)" value={bill} onChange={setBill} placeholder="VD: 500000" />
-      <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>Tip %</label>
-        <div className="flex gap-2 flex-wrap">
-          {TIP_PRESETS.map(t => (
-            <button key={t} onClick={() => setTipPct(t)} className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-all ${tipPct === t ? "tab-active" : ""}`} style={tipPct === t ? {} : { background: "var(--border)", color: "var(--text)" }}>{t}%</button>
-          ))}
-          <input type="number" value={tipPct} onChange={e => setTipPct(e.target.value)} className="w-20 rounded-lg border px-2 py-1.5 text-sm font-semibold" style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }} placeholder="Tùy chỉnh" inputMode="decimal" />
-        </div>
+      <p className="text-sm" style={{ color: "var(--text-muted)" }}>Chia bill nhóm — chia đều, theo món, hoặc theo % tùy ý</p>
+      <div className="flex gap-2">
+        <button onClick={() => setMode("equal")} className={`flex-1 rounded-xl py-2.5 text-xs font-semibold transition-all ${mode === "equal" ? "tab-active" : ""}`} style={mode === "equal" ? {} : { background: "var(--border)", color: "var(--text)" }}>Chia đều</button>
+        <button onClick={() => setMode("byItem")} className={`flex-1 rounded-xl py-2.5 text-xs font-semibold transition-all ${mode === "byItem" ? "tab-active" : ""}`} style={mode === "byItem" ? {} : { background: "var(--border)", color: "var(--text)" }}>Theo món</button>
+        <button onClick={() => setMode("custom")} className={`flex-1 rounded-xl py-2.5 text-xs font-semibold transition-all ${mode === "custom" ? "tab-active" : ""}`} style={mode === "custom" ? {} : { background: "var(--border)", color: "var(--text)" }}>% tùy ý</button>
       </div>
-      <NumInput label="Số người" value={people} onChange={setPeople} placeholder="VD: 2" />
-      <ResultBox result={result} formula={formula} onCopy={copy} copied={copied} />
+
+      {/* VAT + Tip preset (chung cho mọi mode) */}
+      <div className="flex flex-col gap-2 rounded-xl p-3" style={{ background: "var(--border)" }}>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>VAT (thuế GTGT) %</label>
+          <div className="flex gap-2 flex-wrap items-center">
+            {VAT_PRESETS.map(v => (
+              <button key={v} onClick={() => setVatPct(v)} className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${vatPct === v ? "tab-active" : ""}`} style={vatPct === v ? {} : { background: "var(--card)", color: "var(--text)" }}>{v}%</button>
+            ))}
+            <input type="number" value={vatPct} onChange={e => setVatPct(e.target.value)} className="w-16 rounded-lg border px-2 py-1.5 text-xs font-semibold" style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }} placeholder="Custom" inputMode="decimal" />
+          </div>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>Tip %</label>
+          <div className="flex gap-2 flex-wrap items-center">
+            {TIP_PRESETS.map(t => (
+              <button key={t} onClick={() => setTipPct(t)} className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${tipPct === t ? "tab-active" : ""}`} style={tipPct === t ? {} : { background: "var(--card)", color: "var(--text)" }}>{t}%</button>
+            ))}
+            <input type="number" value={tipPct} onChange={e => setTipPct(e.target.value)} className="w-16 rounded-lg border px-2 py-1.5 text-xs font-semibold" style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }} placeholder="Custom" inputMode="decimal" />
+          </div>
+        </div>
+        <label className="flex items-center gap-2 text-xs cursor-pointer mt-1" style={{ color: "var(--text-muted)" }}>
+          <input type="checkbox" checked={tipOnVat} onChange={e => setTipOnVat(e.target.checked)} />
+          <span>Tip tính trên giá đã VAT (chuẩn quốc tế)</span>
+        </label>
+      </div>
+
+      {/* ───── Mode A: equal ───── */}
+      {mode === "equal" && (
+        <>
+          <NumInput label="Tổng bill (₫)" value={bill} onChange={setBill} placeholder="VD: 500000" />
+          <NumInput label="Số người" value={people} onChange={setPeople} placeholder="VD: 4" />
+          {aHasBill && (
+            <>
+              <div className="mt-2 rounded-2xl p-4 slide-in" style={{ background: "var(--result-bg)" }}>
+                <p className="text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Mỗi người trả</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-3xl font-bold" style={{ color: "var(--result-text)" }}>{formatVND(aPerPerson)}</p>
+                  <button onClick={copyResult} className="shrink-0 rounded-xl px-3 py-2 text-sm font-semibold transition-all active:scale-95" style={{ background: copied ? "#22c55e" : "var(--primary)", color: "#fff" }}>{copied ? "✓ Đã copy" : "Copy"}</button>
+                </div>
+                <p className="text-xs mt-2 opacity-75" style={{ color: "var(--text-muted)" }}>{formula}</p>
+              </div>
+              <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--border)" }}>
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr style={{ background: "var(--card)" }}>
+                      <td className="px-3 py-2" style={{ color: "var(--text-muted)" }}>Tiền món</td>
+                      <td className="px-3 py-2 text-right font-semibold">{formatVND(aBillN)}</td>
+                    </tr>
+                    <tr style={{ background: "var(--bg)" }}>
+                      <td className="px-3 py-2" style={{ color: "var(--text-muted)" }}>VAT ({vatN}%)</td>
+                      <td className="px-3 py-2 text-right font-semibold">{formatVND(aVatAmt)}</td>
+                    </tr>
+                    <tr style={{ background: "var(--card)" }}>
+                      <td className="px-3 py-2" style={{ color: "var(--text-muted)" }}>Tip ({tipN}% {tipOnVat ? "sau VAT" : "trước VAT"})</td>
+                      <td className="px-3 py-2 text-right font-semibold">{formatVND(aTipAmt)}</td>
+                    </tr>
+                    <tr style={{ background: "var(--bg)" }}>
+                      <td className="px-3 py-2 font-bold">Tổng phải trả</td>
+                      <td className="px-3 py-2 text-right font-bold text-green-500">{formatVND(aTotal)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </>
+      )}
+
+      {/* ───── Mode B: byItem ───── */}
+      {mode === "byItem" && (
+        <>
+          {/* Section: People */}
+          <div className="rounded-xl p-3 border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-semibold">👥 Người ({bPeople.length})</p>
+              <button onClick={addPersonB} className="text-xs rounded-lg px-2.5 py-1 font-semibold" style={{ background: "var(--primary)", color: "#fff" }}>+ Thêm</button>
+            </div>
+            <div className="flex flex-col gap-2">
+              {bPeople.map(p => (
+                <div key={p.id} className="flex gap-2 items-center">
+                  <input value={p.name} onChange={e => renamePersonB(p.id, e.target.value)} className="flex-1 rounded-lg border px-3 py-2 text-sm" style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }} />
+                  {bPeople.length > 1 && (
+                    <button onClick={() => removePersonB(p.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style={{ background: "var(--border)", color: "#ef4444" }} title="Xóa">✕</button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Section: Dishes */}
+          <div className="rounded-xl p-3 border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-semibold">🍽 Món ({dishes.length})</p>
+              <button onClick={addDish} className="text-xs rounded-lg px-2.5 py-1 font-semibold" style={{ background: "var(--primary)", color: "#fff" }}>+ Thêm</button>
+            </div>
+            <div className="flex flex-col gap-3">
+              {dishes.map(d => {
+                const priceN = parseFloat(d.price);
+                const hasPrice = !isNaN(priceN) && priceN > 0;
+                const eaters = d.sharedBy.length;
+                return (
+                  <div key={d.id} className="rounded-lg p-2.5 border" style={{ background: "var(--bg)", borderColor: "var(--border)" }}>
+                    <div className="flex gap-2">
+                      <input value={d.name} onChange={e => updateDish(d.id, { name: e.target.value })} placeholder="Tên món" className="flex-1 rounded-lg border px-3 py-2 text-sm" style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }} />
+                      <input type="number" value={d.price} onChange={e => updateDish(d.id, { price: e.target.value })} placeholder="Giá ₫" className="w-28 rounded-lg border px-3 py-2 text-sm font-semibold" style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }} inputMode="decimal" />
+                      <button onClick={() => removeDish(d.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style={{ background: "var(--border)", color: "#ef4444" }} title="Xóa">✕</button>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <span className="text-xs mr-1 self-center" style={{ color: "var(--text-muted)" }}>Ai ăn:</span>
+                      {bPeople.map(p => {
+                        const on = d.sharedBy.includes(p.id);
+                        return (
+                          <button key={p.id} onClick={() => toggleDishPerson(d.id, p.id)} className="text-xs rounded-lg px-2 py-1 font-medium transition-all" style={{ background: on ? "var(--primary)" : "var(--card)", color: on ? "#fff" : "var(--text)", border: "1px solid var(--border)" }}>{on ? "☑" : "☐"} {p.name}</button>
+                        );
+                      })}
+                    </div>
+                    {hasPrice && eaters > 0 && (
+                      <p className="text-xs mt-1.5" style={{ color: "var(--text-muted)" }}>= {formatVND(priceN / eaters)} / người ({eaters} người ăn)</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Section: Result table */}
+          {bHasData && (
+            <>
+              <div className="mt-2 rounded-2xl p-4" style={{ background: "var(--result-bg)" }}>
+                <p className="text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Tổng phải trả</p>
+                <p className="text-3xl font-bold" style={{ color: "var(--result-text)" }}>{formatVND(bGrandTotal)}</p>
+                <p className="text-xs mt-2 opacity-75" style={{ color: "var(--text-muted)" }}>{bPeople.length} người · {dishes.length} món · VAT {formatVND(bGrandVat)} · Tip {formatVND(bGrandTip)}</p>
+              </div>
+              {/* Desktop: table */}
+              <div className="hidden sm:block rounded-xl overflow-hidden border" style={{ borderColor: "var(--border)" }}>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr style={{ background: "var(--border)" }}>
+                        <th className="px-3 py-2 text-left text-xs font-semibold" style={{ color: "var(--text-muted)" }}>Tên</th>
+                        <th className="px-3 py-2 text-right text-xs font-semibold" style={{ color: "var(--text-muted)" }}>Món</th>
+                        <th className="px-3 py-2 text-right text-xs font-semibold" style={{ color: "var(--text-muted)" }}>VAT</th>
+                        <th className="px-3 py-2 text-right text-xs font-semibold" style={{ color: "var(--text-muted)" }}>Tip</th>
+                        <th className="px-3 py-2 text-right text-xs font-semibold" style={{ color: "var(--text-muted)" }}>Phải trả</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bPerPerson.rows.map((r, i) => (
+                        <tr key={r.id} style={{ background: i % 2 === 0 ? "var(--card)" : "var(--bg)" }}>
+                          <td className="px-3 py-2 font-semibold">{r.name || "—"}</td>
+                          <td className="px-3 py-2 text-right">{formatVND(r.food)}</td>
+                          <td className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>{formatVND(r.vat)}</td>
+                          <td className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>{formatVND(r.tip)}</td>
+                          <td className="px-3 py-2 text-right font-bold text-green-500">
+                            {formatVND(r.total)} {r.total === bMaxTotal && bMaxTotal > 0 && "🏆"}
+                          </td>
+                        </tr>
+                      ))}
+                      <tr style={{ background: "var(--border)" }}>
+                        <td className="px-3 py-2 font-bold">Tổng</td>
+                        <td className="px-3 py-2 text-right font-bold">{formatVND(bPerPerson.foodTotal)}</td>
+                        <td className="px-3 py-2 text-right font-bold">{formatVND(bGrandVat)}</td>
+                        <td className="px-3 py-2 text-right font-bold">{formatVND(bGrandTip)}</td>
+                        <td className="px-3 py-2 text-right font-bold text-green-500">{formatVND(bGrandTotal)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              {/* Mobile: card stack */}
+              <div className="sm:hidden flex flex-col gap-2">
+                {bPerPerson.rows.map(r => (
+                  <div key={r.id} className="rounded-xl p-3 border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="font-bold">{r.name || "—"} {r.total === bMaxTotal && bMaxTotal > 0 && "🏆"}</p>
+                      <p className="font-bold text-green-500">{formatVND(r.total)}</p>
+                    </div>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>Món {formatVND(r.food)} + VAT {formatVND(r.vat)} + Tip {formatVND(r.tip)}</p>
+                  </div>
+                ))}
+                <div className="rounded-xl p-3" style={{ background: "var(--border)" }}>
+                  <div className="flex items-center justify-between">
+                    <p className="font-bold">Tổng</p>
+                    <p className="font-bold text-green-500">{formatVND(bGrandTotal)}</p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </>
+      )}
+
+      {/* ───── Mode C: custom % ───── */}
+      {mode === "custom" && (
+        <>
+          <NumInput label="Tổng bill (₫)" value={cBill} onChange={setCBill} placeholder="VD: 1000000" />
+          <div className="rounded-xl p-3 border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-semibold">👥 Người + tỉ lệ % ({cPeople.length})</p>
+              <div className="flex gap-2">
+                <button onClick={fillEvenly} className="text-xs rounded-lg px-2.5 py-1 font-semibold" style={{ background: "var(--border)", color: "var(--text)" }}>Chia đều</button>
+                <button onClick={addPersonC} className="text-xs rounded-lg px-2.5 py-1 font-semibold" style={{ background: "var(--primary)", color: "#fff" }}>+ Thêm</button>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              {cPeople.map(p => (
+                <div key={p.id} className="flex gap-2 items-center">
+                  <input value={p.name} onChange={e => renamePersonC(p.id, e.target.value)} className="flex-1 rounded-lg border px-3 py-2 text-sm" style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }} />
+                  <div className="relative w-24">
+                    <input type="number" value={ratios[p.id] ?? ""} onChange={e => setRatio(p.id, e.target.value)} placeholder="%" className="w-full rounded-lg border px-3 py-2 text-sm font-semibold pr-7" style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }} inputMode="decimal" />
+                    <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-blue-500">%</span>
+                  </div>
+                  {cPeople.length > 1 && (
+                    <button onClick={() => removePersonC(p.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style={{ background: "var(--border)", color: "#ef4444" }} title="Xóa">✕</button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 flex items-center justify-between text-xs">
+              <span style={{ color: "var(--text-muted)" }}>Tổng tỉ lệ</span>
+              <span className={`font-bold ${cRatioOk ? "text-green-500" : "text-red-500"}`}>{formatNum(cSumRatio)}% {cRatioOk ? "✓" : "⚠ ≠ 100%"}</span>
+            </div>
+          </div>
+          {cHasBill && cRatioOk && (
+            <>
+              <div className="mt-2 rounded-2xl p-4" style={{ background: "var(--result-bg)" }}>
+                <p className="text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>Tổng phải trả</p>
+                <p className="text-3xl font-bold" style={{ color: "var(--result-text)" }}>{formatVND(cTotal)}</p>
+                <p className="text-xs mt-2 opacity-75" style={{ color: "var(--text-muted)" }}>Món {formatVND(cBillN)} + VAT {formatVND(cVatAmt)} + Tip {formatVND(cTipAmt)}</p>
+              </div>
+              <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--border)" }}>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ background: "var(--border)" }}>
+                      <th className="px-3 py-2 text-left text-xs" style={{ color: "var(--text-muted)" }}>Tên</th>
+                      <th className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>Tỉ lệ</th>
+                      <th className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>Phải trả</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cRows.map((r, i) => (
+                      <tr key={r.id} style={{ background: i % 2 === 0 ? "var(--card)" : "var(--bg)" }}>
+                        <td className="px-3 py-2 font-semibold">{r.name || "—"}</td>
+                        <td className="px-3 py-2 text-right">{r.ratio}%</td>
+                        <td className="px-3 py-2 text-right font-bold text-green-500">{isNaN(r.pay) ? "—" : formatVND(r.pay)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+          {cHasBill && !cRatioOk && (
+            <div className="rounded-xl p-3 text-sm border border-red-300" style={{ background: "rgba(239,68,68,0.1)", color: "#dc2626" }}>
+              ⚠ Tổng tỉ lệ {formatNum(cSumRatio)}% phải bằng 100% để tính chính xác.
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Action buttons */}
+      {hasShareData && (
+        <>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <button onClick={copyTable} className="rounded-xl py-3 text-sm font-semibold transition-all active:scale-95" style={{ background: tableCopied ? "#22c55e" : "var(--card)", color: tableCopied ? "#fff" : "var(--text)", border: "1px solid var(--border)" }}>{tableCopied ? "✓ Đã copy" : "📋 Copy bảng"}</button>
+            <button onClick={() => setShareOpen(true)} className="rounded-xl py-3 text-sm font-semibold transition-all active:scale-95" style={{ background: "var(--primary)", color: "#fff" }}>📤 Share kết quả</button>
+          </div>
+          <ShareModal
+            open={shareOpen}
+            onClose={() => setShareOpen(false)}
+            url={shareUrl}
+            ogImageUrl={ogImageUrl}
+            title={shareTitle}
+            text={shareText}
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -1601,7 +2160,7 @@ const TAB_COMPONENTS: Record<TabId, React.FC> = {
   "find-base": TabFindBase,
   "discount": TabDiscount as unknown as React.FC,
   "compare": TabCompare,
-  "tip": TabTip,
+  "tip": TabTip as unknown as React.FC,
   "interest": TabInterest,
   "compound": TabCompound as unknown as React.FC,
   "salary-tax": TabSalaryTax as unknown as React.FC,
@@ -1753,6 +2312,7 @@ function CalculatorInner({ initialTab, singleTab = false, breadcrumb }: Calculat
       case "compound":     return { tab: initialTab, data: decodeCompound(p) };
       case "discount":     return { tab: initialTab, data: decodeDiscount(p) };
       case "breakeven":    return { tab: initialTab, data: decodeBreakeven(p) };
+      case "tip":          return { tab: initialTab, data: decodeTip(p) };
       default: return null;
     }
   }, [initialTab, searchParams]);
