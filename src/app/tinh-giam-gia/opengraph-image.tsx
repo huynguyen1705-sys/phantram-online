@@ -1,6 +1,8 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 export const alt = "Tính giảm giá — phantram.online";
 export const contentType = "image/png";
 export const size = { width: 1200, height: 630 };
@@ -127,6 +129,11 @@ export default async function Image({ searchParams }: { searchParams?: SP } = {}
         </div>
       </div>
     ),
-    { ...size }
+    {
+      ...size,
+      headers: {
+        "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
+      },
+    }
   );
 }
