@@ -40,6 +40,12 @@ export default async function Image({ searchParams }: { searchParams?: SP } = {}
   const periodLabel = isFinite(t) && t > 0
     ? `${t} ${unit === "month" ? "tháng" : "năm"}`
     : "—";
+  const amountStr = isFinite(amount) ? formatVND(amount) + " ₫" : "—";
+  const interestStr = isFinite(interest) ? "+ Lãi " + formatVND(interest) + " ₫" : "";
+  const rateLabel = isFinite(rate)
+    ? `${rate}% / ${unit === "month" ? "th" : "năm"}`
+    : "—";
+  const freqLabel = freq === "monthly" ? "Tháng" : freq === "quarterly" ? "Quý" : "Năm";
 
   return new ImageResponse(
     (
@@ -55,41 +61,41 @@ export default async function Image({ searchParams }: { searchParams?: SP } = {}
           <div style={{ width: 56, height: 56, background: "#2563eb", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 900, marginRight: 18 }}>%</div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 26, fontWeight: 700 }}>phantram.online</div>
-            <div style={{ fontSize: 16, opacity: 0.7 }}>Lãi kép — A = P(1 + r/n)^(nt)</div>
+            <div style={{ fontSize: 16, opacity: 0.7 }}>Lãi kép — Compound interest</div>
           </div>
         </div>
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ fontSize: 28, opacity: 0.8, marginBottom: 8 }}>Tổng tích lũy sau {periodLabel}</div>
-          <div style={{ fontSize: 130, fontWeight: 900, color: "#22c55e", lineHeight: 1 }}>
-            {isFinite(amount) ? formatVND(amount) + " ₫" : "—"}
+          <div style={{ display: "flex", fontSize: 28, opacity: 0.8, marginBottom: 8 }}>Tổng tích lũy sau {periodLabel}</div>
+          <div style={{ display: "flex", fontSize: 130, fontWeight: 900, color: "#22c55e", lineHeight: 1 }}>
+            {amountStr}
           </div>
-          {isFinite(interest) && (
-            <div style={{ fontSize: 36, fontWeight: 700, color: "#fbbf24", marginTop: 16 }}>
-              + Lãi {formatVND(interest)} ₫
+          {interestStr && (
+            <div style={{ display: "flex", fontSize: 36, fontWeight: 700, color: "#fbbf24", marginTop: 16 }}>
+              {interestStr}
             </div>
           )}
           {isFinite(p) && p > 0 && isFinite(rate) && (
             <div style={{ display: "flex", gap: 28, marginTop: 32, fontSize: 22, opacity: 0.85 }}>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <div style={{ opacity: 0.6, fontSize: 18 }}>Vốn gốc</div>
-                <div style={{ fontWeight: 700 }}>{formatVND(p)} ₫</div>
+                <div style={{ display: "flex", opacity: 0.6, fontSize: 18 }}>Vốn gốc</div>
+                <div style={{ display: "flex", fontWeight: 700 }}>{formatVND(p)} ₫</div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <div style={{ opacity: 0.6, fontSize: 18 }}>Lãi suất</div>
-                <div style={{ fontWeight: 700 }}>{rate}% / {unit === "month" ? "th" : "năm"}</div>
+                <div style={{ display: "flex", opacity: 0.6, fontSize: 18 }}>Lãi suất</div>
+                <div style={{ display: "flex", fontWeight: 700 }}>{rateLabel}</div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <div style={{ opacity: 0.6, fontSize: 18 }}>Ghép lãi</div>
-                <div style={{ fontWeight: 700 }}>{freq === "monthly" ? "Tháng" : freq === "quarterly" ? "Quý" : "Năm"}</div>
+                <div style={{ display: "flex", opacity: 0.6, fontSize: 18 }}>Ghép lãi</div>
+                <div style={{ display: "flex", fontWeight: 700 }}>{freqLabel}</div>
               </div>
             </div>
           )}
         </div>
 
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 18, opacity: 0.6, marginTop: 20 }}>
-          <div>Compound interest calculator</div>
-          <div>phantram.online/lai-kep</div>
+          <div style={{ display: "flex" }}>Compound interest calculator</div>
+          <div style={{ display: "flex" }}>phantram.online/lai-kep</div>
         </div>
       </div>
     ),
