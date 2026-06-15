@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import BlogSection from "./BlogSection";
 import IntroSEO from "./IntroSEO";
 
@@ -25,6 +25,12 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "compound", label: "Lãi kép", icon: "📈" },
   { id: "salary-tax", label: "Lương Net (Thuế TNCN)", icon: "💼" },
   { id: "breakeven", label: "Hoàn vốn / Break-even", icon: "📉" },
+];
+
+const TAB_GROUPS: { id: string; label: string; icon: string; tabs: TabId[] }[] = [
+  { id: "basic", label: "Cơ bản", icon: "🧮", tabs: ["percent-of", "what-percent", "change", "increase-decrease", "find-base"] },
+  { id: "finance", label: "Tài chính", icon: "💰", tabs: ["interest", "compound", "salary-tax", "breakeven"] },
+  { id: "shopping", label: "Mua sắm", icon: "🛒", tabs: ["discount", "compare", "tip"] },
 ];
 
 function formatNum(n: number): string {
@@ -273,7 +279,7 @@ function TabInterest() {
 }
 
 // ────────── Basic Calculator ──────────
-function BasicCalc() {
+function BasicCalc({ compact = false }: { compact?: boolean }) {
   const [display, setDisplay] = useState("0");
   const [expr, setExpr] = useState("");
   const [justCalc, setJustCalc] = useState(false);
@@ -340,20 +346,20 @@ function BasicCalc() {
   const isAction = (v: string) => ["C", "⌫", "%"].includes(v);
 
   return (
-    <div className="max-w-lg mx-auto mt-4 rounded-2xl border shadow-sm overflow-hidden" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+    <div className={`${compact ? "" : "max-w-lg mx-auto mt-4"} rounded-2xl border shadow-sm overflow-hidden`} style={{ background: "var(--card)", borderColor: "var(--border)" }}>
       {/* Display */}
-      <div className="px-5 pt-4 pb-3" style={{ background: "var(--card)" }}>
+      <div className={`${compact ? "px-3 pt-3 pb-2" : "px-5 pt-4 pb-3"}`} style={{ background: "var(--card)" }}>
         <div className="flex items-start justify-between gap-2 mb-1">
           <p className="text-xs font-semibold tracking-wide" style={{ color: "var(--text-muted)" }}>MÁY TÍNH</p>
           <button onClick={copy} className="text-xs px-2 py-0.5 rounded-lg font-semibold transition-all" style={{ background: copied ? "#22c55e" : "var(--border)", color: copied ? "#fff" : "var(--text-muted)" }}>{copied ? "✓" : "copy"}</button>
         </div>
-        <div className="min-h-[3rem] flex items-end justify-end">
-          <p className="text-right font-bold leading-tight break-all" style={{ fontSize: display.length > 12 ? "1.4rem" : display.length > 8 ? "1.8rem" : "2.4rem", color: "var(--text)" }}>{display}</p>
+        <div className={`${compact ? "min-h-[2.2rem]" : "min-h-[3rem]"} flex items-end justify-end`}>
+          <p className="text-right font-bold leading-tight break-all" style={{ fontSize: compact ? (display.length > 10 ? "1.1rem" : "1.5rem") : (display.length > 12 ? "1.4rem" : display.length > 8 ? "1.8rem" : "2.4rem"), color: "var(--text)" }}>{display}</p>
         </div>
         {expr && !justCalc && <p className="text-right text-xs mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>{expr}</p>}
       </div>
       {/* Buttons */}
-      <div className="p-3 grid gap-2">
+      <div className={`${compact ? "p-2" : "p-3"} grid gap-2`}>
         {BUTTONS.map((row, ri) => (
           <div key={ri} className={`grid gap-2 ${row.length === 4 ? "grid-cols-4" : "grid-cols-[1fr_2fr_1fr]"}`}>
             {row.map(btn => {
@@ -364,7 +370,7 @@ function BasicCalc() {
                 <button
                   key={btn}
                   onClick={() => handleBtn(btn)}
-                  className="rounded-2xl py-4 text-xl font-bold transition-all active:scale-95 select-none"
+                  className={`rounded-2xl ${compact ? "py-2.5 text-base" : "py-4 text-xl"} font-bold transition-all active:scale-95 select-none`}
                   style={{
                     background: eq ? "var(--primary)" : op ? "#dbeafe" : ac ? "var(--border)" : "var(--bg)",
                     color: eq ? "#fff" : op ? "var(--primary)" : ac ? "var(--text)" : "var(--text)",
@@ -818,6 +824,84 @@ const TAB_COMPONENTS: Record<TabId, React.FC> = {
   "breakeven": TabBreakeven,
 };
 
+// ────────── Shared UI pieces ──────────
+
+function TabButton({ tab, isActive, onClick, fullWidth = false }: { tab: { id: TabId; label: string; icon: string }; isActive: boolean; onClick: () => void; fullWidth?: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`${fullWidth ? "w-full text-center" : "shrink-0"} rounded-xl px-3 py-2 text-sm font-semibold transition-all whitespace-nowrap active:scale-95 ${isActive ? "tab-active" : ""}`}
+      style={isActive ? {} : { background: "var(--card)", color: "var(--text-muted)", border: "1px solid var(--border)" }}
+    >
+      {tab.icon} {tab.label}
+    </button>
+  );
+}
+
+function HistoryPanel({ history, setHistory, compact = false }: { history: HistoryItem[]; setHistory: (h: HistoryItem[]) => void; compact?: boolean }) {
+  return (
+    <div className={`rounded-2xl border p-4 ${compact ? "" : "slide-in"}`} style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+      <div className="flex items-center justify-between mb-3">
+        <p className="font-semibold text-sm">🕐 Lịch sử ({history.length})</p>
+        {history.length > 0 && (
+          <button onClick={() => { setHistory([]); localStorage.setItem("calc-history", "[]"); }} className="text-xs text-red-400 hover:text-red-500">Xóa tất cả</button>
+        )}
+      </div>
+      {history.length === 0 ? (
+        <p className="text-sm text-center py-4" style={{ color: "var(--text-muted)" }}>Chưa có lịch sử</p>
+      ) : (
+        <div className="flex flex-col gap-2 max-h-72 overflow-y-auto">
+          {history.slice().reverse().map(h => (
+            <div key={h.id} className="flex items-center justify-between gap-2 rounded-xl px-3 py-2" style={{ background: "var(--bg)" }}>
+              <div className="min-w-0">
+                <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{h.label}</p>
+                <p className="font-semibold text-sm truncate" style={{ color: "var(--text)" }}>{h.result}</p>
+              </div>
+              <p className="text-xs shrink-0" style={{ color: "var(--text-muted)" }}>{h.time}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const INFO_CARDS = [
+  { icon: "⚡", label: "Tính ngay", sub: "Không cần nhấn Enter" },
+  { icon: "📱", label: "Mobile-first", sub: "Tối ưu điện thoại" },
+  { icon: "🆓", label: "Miễn phí", sub: "100% không quảng cáo" },
+];
+
+function InfoCardsVertical() {
+  return (
+    <div className="flex flex-col gap-3">
+      {INFO_CARDS.map(c => (
+        <div key={c.label} className="rounded-xl p-3 flex items-center gap-3" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+          <p className="text-2xl shrink-0">{c.icon}</p>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{c.label}</p>
+            <p className="text-xs" style={{ color: "var(--text-muted)" }}>{c.sub}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function InfoCardsGrid() {
+  return (
+    <div className="grid grid-cols-3 gap-3">
+      {INFO_CARDS.map(c => (
+        <div key={c.label} className="rounded-xl p-3 text-center" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+          <p className="text-xl mb-1">{c.icon}</p>
+          <p className="text-xs font-semibold" style={{ color: "var(--text)" }}>{c.label}</p>
+          <p className="text-xs" style={{ color: "var(--text-muted)" }}>{c.sub}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Calculator() {
   const [activeTab, setActiveTab] = useState<TabId>("percent-of");
   const [dark, setDark] = useState(false);
@@ -847,92 +931,118 @@ export default function Calculator() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b px-4 py-3 flex items-center justify-between" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ background: "var(--primary)" }}>%</div>
-          <div>
-            <p className="font-bold text-base leading-tight" style={{ color: "var(--text)" }}>Phần Trăm</p>
-            <p className="text-xs" style={{ color: "var(--text-muted)" }}>phantram.online</p>
+      <header className="sticky top-0 z-30 border-b" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+        <div className="flex items-center justify-between px-4 lg:px-6 py-3 lg:max-w-7xl lg:mx-auto">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ background: "var(--primary)" }}>%</div>
+            <div>
+              <p className="font-bold text-base leading-tight" style={{ color: "var(--text)" }}>Phần Trăm</p>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>phantram.online</p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <a
-            href="https://blog.phantram.online/"
-            className="flex items-center gap-1 rounded-xl px-3 h-9 text-sm font-semibold transition-all active:scale-95 hover:opacity-80"
-            style={{ background: "var(--primary)", color: "#fff" }}
-          >
-            <span>📝</span>
-            <span>Blog</span>
-          </a>
-          <button onClick={() => setShowHistory(h => !h)} className="w-9 h-9 rounded-xl flex items-center justify-center text-lg transition-all active:scale-95" style={{ background: "var(--border)" }} title="Lịch sử">🕐</button>
-          <button onClick={toggleDark} className="w-9 h-9 rounded-xl flex items-center justify-center text-lg transition-all active:scale-95" style={{ background: "var(--border)" }}>{dark ? "☀️" : "🌙"}</button>
+          <div className="flex items-center gap-2">
+            <a
+              href="https://blog.phantram.online/"
+              className="flex items-center gap-1 rounded-xl px-3 h-9 text-sm font-semibold transition-all active:scale-95 hover:opacity-80"
+              style={{ background: "var(--primary)", color: "#fff" }}
+            >
+              <span>📝</span>
+              <span>Blog</span>
+            </a>
+            {/* Lịch sử chỉ hiện mobile/tablet (PC có sidekick) */}
+            <button onClick={() => setShowHistory(h => !h)} className="lg:hidden w-9 h-9 rounded-xl flex items-center justify-center text-lg transition-all active:scale-95" style={{ background: "var(--border)" }} title="Lịch sử">🕐</button>
+            <button onClick={toggleDark} className="w-9 h-9 rounded-xl flex items-center justify-center text-lg transition-all active:scale-95" style={{ background: "var(--border)" }}>{dark ? "☀️" : "🌙"}</button>
+          </div>
         </div>
       </header>
 
-      {/* History panel */}
+      {/* History panel — chỉ mobile/tablet khi toggle */}
       {showHistory && (
-        <div className="mx-4 mt-3 rounded-2xl border p-4 slide-in" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-          <div className="flex items-center justify-between mb-3">
-            <p className="font-semibold text-sm">Lịch sử tính ({history.length})</p>
-            {history.length > 0 && (
-              <button onClick={() => { setHistory([]); localStorage.setItem("calc-history", "[]"); }} className="text-xs text-red-400 hover:text-red-500">Xóa tất cả</button>
-            )}
-          </div>
-          {history.length === 0 ? (
-            <p className="text-sm text-center py-4" style={{ color: "var(--text-muted)" }}>Chưa có lịch sử</p>
-          ) : (
-            <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
-              {history.slice().reverse().map(h => (
-                <div key={h.id} className="flex items-center justify-between gap-2 rounded-xl px-3 py-2" style={{ background: "var(--bg)" }}>
-                  <div className="min-w-0">
-                    <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{h.label}</p>
-                    <p className="font-semibold text-sm truncate" style={{ color: "var(--text)" }}>{h.result}</p>
-                  </div>
-                  <p className="text-xs shrink-0" style={{ color: "var(--text-muted)" }}>{h.time}</p>
-                </div>
-              ))}
-            </div>
-          )}
+        <div className="lg:hidden mx-4 mt-3">
+          <HistoryPanel history={history} setHistory={setHistory} />
         </div>
       )}
 
-      {/* Tab scroll */}
-      <div className="overflow-x-auto px-4 py-3 flex gap-2 no-scrollbar" style={{ scrollbarWidth: "none" }}>
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`shrink-0 rounded-xl px-3 py-2 text-sm font-semibold transition-all whitespace-nowrap active:scale-95 ${activeTab === tab.id ? "tab-active" : ""}`}
-            style={activeTab === tab.id ? {} : { background: "var(--card)", color: "var(--text-muted)", border: "1px solid var(--border)" }}
-          >
-            {tab.icon} {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Main card */}
-      <main className="flex-1 px-4 pb-8">
-        <div className="max-w-lg mx-auto rounded-2xl p-5 shadow-sm border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-          <ActiveTab key={activeTab} />
+      {/* ═══ MOBILE + TABLET LAYOUT ═══ */}
+      <div className="lg:hidden">
+        {/* Mobile: scroll ngang với gradient fade */}
+        <div className="md:hidden relative">
+          <div className="overflow-x-auto px-4 py-3 flex gap-2 no-scrollbar" style={{ scrollbarWidth: "none" }}>
+            {TABS.map(tab => (
+              <TabButton key={tab.id} tab={tab} isActive={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} />
+            ))}
+          </div>
+          <div className="absolute right-0 top-0 bottom-0 w-8 pointer-events-none" style={{ background: "linear-gradient(to right, transparent, var(--bg))" }} />
+          <div className="absolute left-0 top-0 bottom-0 w-8 pointer-events-none" style={{ background: "linear-gradient(to left, transparent, var(--bg))" }} />
         </div>
-
-        <BasicCalc />
-
-        {/* Info cards */}
-        <div className="max-w-lg mx-auto mt-4 grid grid-cols-3 gap-3">
-          {[
-            { icon: "⚡", label: "Tính ngay", sub: "Không cần nhấn Enter" },
-            { icon: "📱", label: "Mobile-first", sub: "Tối ưu điện thoại" },
-            { icon: "🆓", label: "Miễn phí", sub: "100% không quảng cáo" },
-          ].map(c => (
-            <div key={c.label} className="rounded-xl p-3 text-center" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-              <p className="text-xl mb-1">{c.icon}</p>
-              <p className="text-xs font-semibold" style={{ color: "var(--text)" }}>{c.label}</p>
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>{c.sub}</p>
-            </div>
+        {/* Tablet: grid 3 cột */}
+        <div className="hidden md:grid grid-cols-3 gap-2 px-4 py-3">
+          {TABS.map(tab => (
+            <TabButton key={tab.id} tab={tab} isActive={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} fullWidth />
           ))}
         </div>
-      </main>
+
+        <main className="px-4 pb-8">
+          <div className="max-w-lg md:max-w-2xl mx-auto rounded-2xl p-5 shadow-sm border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+            <ActiveTab key={activeTab} />
+          </div>
+
+          <div className="max-w-lg md:max-w-2xl mx-auto">
+            <BasicCalc />
+          </div>
+
+          <div className="max-w-lg md:max-w-2xl mx-auto mt-4">
+            <InfoCardsGrid />
+          </div>
+        </main>
+      </div>
+
+      {/* ═══ DESKTOP LAYOUT ═══ */}
+      <div className="hidden lg:block w-full px-6 py-6 flex-1">
+        <div className="max-w-7xl mx-auto grid grid-cols-12 gap-6">
+          {/* Sidebar trái: groups */}
+          <aside className="col-span-3 sticky top-20 self-start">
+            {TAB_GROUPS.map(group => (
+              <div key={group.id} className="mb-5">
+                <p className="text-xs font-bold uppercase mb-2 px-2 tracking-wide" style={{ color: "var(--text-muted)" }}>
+                  {group.icon} {group.label}
+                </p>
+                <div className="flex flex-col gap-1">
+                  {group.tabs.map(tabId => {
+                    const tab = TABS.find(t => t.id === tabId);
+                    if (!tab) return null;
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`text-left rounded-lg px-3 py-2 text-sm font-medium transition-all active:scale-95 ${isActive ? "tab-active" : "hover:opacity-80"}`}
+                        style={isActive ? {} : { background: "var(--card)", color: "var(--text)", border: "1px solid var(--border)" }}
+                      >
+                        {tab.icon} {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </aside>
+
+          {/* Main calculator */}
+          <section className="col-span-6">
+            <div className="rounded-2xl p-6 shadow-sm border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+              <ActiveTab key={activeTab} />
+            </div>
+          </section>
+
+          {/* Sidekick phải: lịch sử + basic calc + info */}
+          <aside className="col-span-3 flex flex-col gap-4">
+            <HistoryPanel history={history} setHistory={setHistory} compact />
+            <BasicCalc compact />
+            <InfoCardsVertical />
+          </aside>
+        </div>
+      </div>
 
       <BlogSection />
 
