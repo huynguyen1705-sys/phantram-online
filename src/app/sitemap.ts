@@ -34,6 +34,24 @@ const BLOG_SLUGS = [
   "phan-tram-trong-tai-chinh",
 ];
 
+// 14 standalone tool URLs
+const TOOL_SLUGS = [
+  "tinh-phan-tram",
+  "bao-nhieu-phan-tram",
+  "phan-tram-tang-giam",
+  "tinh-tang-giam-theo-phan-tram",
+  "tim-gia-tri-goc",
+  "tinh-giam-gia",
+  "so-sanh-gia",
+  "chia-bill-tip",
+  "lai-suat-don",
+  "lai-kep",
+  "luong-net",
+  "break-even",
+  "scale-cong-thuc",
+  "bmi",
+];
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
   const main: MetadataRoute.Sitemap = [
@@ -44,11 +62,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1.0,
     },
   ];
+  const tools: MetadataRoute.Sitemap = TOOL_SLUGS.map((slug) => ({
+    url: `${BASE}/${slug}`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.9,
+  }));
   const blog: MetadataRoute.Sitemap = BLOG_SLUGS.map((slug) => ({
     url: `${BLOG}/${slug}/`,
     lastModified: now,
     changeFrequency: "monthly",
     priority: 0.8,
   }));
-  return [...main, ...blog];
+  return [...main, ...tools, ...blog];
 }

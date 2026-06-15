@@ -1,9 +1,44 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import BlogSection from "./BlogSection";
 import IntroSEO from "./IntroSEO";
 
-type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound" | "salary-tax" | "breakeven" | "recipe-scale" | "weight-bmi";
+export type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound" | "salary-tax" | "breakeven" | "recipe-scale" | "weight-bmi";
+
+export const TAB_URL_MAP: Record<TabId, string> = {
+  "percent-of": "/tinh-phan-tram",
+  "what-percent": "/bao-nhieu-phan-tram",
+  "change": "/phan-tram-tang-giam",
+  "increase-decrease": "/tinh-tang-giam-theo-phan-tram",
+  "find-base": "/tim-gia-tri-goc",
+  "discount": "/tinh-giam-gia",
+  "compare": "/so-sanh-gia",
+  "tip": "/chia-bill-tip",
+  "interest": "/lai-suat-don",
+  "compound": "/lai-kep",
+  "salary-tax": "/luong-net",
+  "breakeven": "/break-even",
+  "recipe-scale": "/scale-cong-thuc",
+  "weight-bmi": "/bmi",
+};
+
+export const TAB_DESCRIPTIONS: Record<TabId, string> = {
+  "percent-of": "Tính nhanh X% của một số bất kỳ. VD: 30% của 200.000đ = 60.000đ",
+  "what-percent": "Số A là bao nhiêu phần trăm của số B. VD: 80/200 = 40%",
+  "change": "Tính % tăng giảm giữa 2 giá trị mới và cũ",
+  "increase-decrease": "Tăng hoặc giảm 1 số theo % cho trước",
+  "find-base": "Biết kết quả và %, tìm giá trị ban đầu (số gốc)",
+  "discount": "Tính giá sau giảm hoặc % giảm giá khi shopping sale",
+  "compare": "So sánh 2 mức giá — chênh lệch tuyệt đối và %",
+  "tip": "Chia bill nhà hàng theo nhóm + tính tip %",
+  "interest": "Tính lãi suất đơn theo vốn × lãi × thời gian",
+  "compound": "Tính lãi kép — vốn × (1+lãi)^kỳ — đầu tư, tiết kiệm",
+  "salary-tax": "Tính lương Net sau BHXH + thuế TNCN lũy tiến 2026",
+  "breakeven": "Tính % cần lãi để bù lỗ, BEP bán hàng, thời gian hoàn vốn đầu tư",
+  "recipe-scale": "Scale công thức nấu ăn cho nhiều/ít người ăn",
+  "weight-bmi": "Tính BMI chuẩn châu Á + mục tiêu giảm cân + TDEE calo",
+};
 
 interface HistoryItem {
   id: number;
@@ -12,7 +47,7 @@ interface HistoryItem {
   time: string;
 }
 
-const TABS: { id: TabId; label: string; icon: string }[] = [
+export const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "percent-of", label: "% của giá trị", icon: "%" },
   { id: "what-percent", label: "Bao nhiêu %", icon: "?" },
   { id: "change", label: "Tăng/Giảm %", icon: "↕" },
@@ -29,7 +64,7 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "weight-bmi", label: "Giảm cân & BMI", icon: "⚖️" },
 ];
 
-const TAB_GROUPS: { id: string; label: string; icon: string; tabs: TabId[] }[] = [
+export const TAB_GROUPS: { id: string; label: string; icon: string; tabs: TabId[] }[] = [
   { id: "basic", label: "Cơ bản", icon: "🧮", tabs: ["percent-of", "what-percent", "change", "increase-decrease", "find-base"] },
   { id: "finance", label: "Tài chính", icon: "💰", tabs: ["interest", "compound", "salary-tax", "breakeven"] },
   { id: "shopping", label: "Mua sắm", icon: "🛒", tabs: ["discount", "compare", "tip"] },
@@ -1440,8 +1475,47 @@ function InfoCardsGrid() {
   );
 }
 
-export default function Calculator() {
-  const [activeTab, setActiveTab] = useState<TabId>("percent-of");
+function RelatedTools({ currentTab }: { currentTab: TabId }) {
+  const group = TAB_GROUPS.find(g => g.tabs.includes(currentTab));
+  const related = (group?.tabs ?? []).filter(id => id !== currentTab).slice(0, 4);
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-xs font-bold uppercase mb-1 px-2 tracking-wide" style={{ color: "var(--text-muted)" }}>
+        🔗 Công cụ liên quan
+      </p>
+      {related.map(tabId => {
+        const tab = TABS.find(t => t.id === tabId);
+        if (!tab) return null;
+        return (
+          <Link
+            key={tabId}
+            href={TAB_URL_MAP[tabId]}
+            className="block rounded-xl px-3 py-2 text-sm transition-all hover:opacity-80"
+            style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}
+          >
+            <p className="font-semibold">{tab.icon} {tab.label}</p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{TAB_DESCRIPTIONS[tabId]}</p>
+          </Link>
+        );
+      })}
+      <Link
+        href="/"
+        className="block rounded-xl px-3 py-2 text-sm font-semibold text-center mt-1 transition-all hover:opacity-80"
+        style={{ background: "var(--primary)", color: "#fff" }}
+      >
+        ← Xem tất cả công cụ
+      </Link>
+    </div>
+  );
+}
+
+interface CalculatorProps {
+  initialTab?: TabId;
+  singleTab?: boolean;
+}
+
+export default function Calculator({ initialTab, singleTab = false }: CalculatorProps = {}) {
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab ?? "percent-of");
   const [dark, setDark] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -1503,24 +1577,28 @@ export default function Calculator() {
 
       {/* ═══ MOBILE + TABLET LAYOUT ═══ */}
       <div className="lg:hidden">
-        {/* Mobile: scroll ngang với gradient fade */}
-        <div className="md:hidden relative">
-          <div className="overflow-x-auto px-4 py-3 flex gap-2 no-scrollbar" style={{ scrollbarWidth: "none" }}>
-            {TABS.map(tab => (
-              <TabButton key={tab.id} tab={tab} isActive={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} />
-            ))}
-          </div>
-          <div className="absolute right-0 top-0 bottom-0 w-8 pointer-events-none" style={{ background: "linear-gradient(to right, transparent, var(--bg))" }} />
-          <div className="absolute left-0 top-0 bottom-0 w-8 pointer-events-none" style={{ background: "linear-gradient(to left, transparent, var(--bg))" }} />
-        </div>
-        {/* Tablet: grid 3 cột */}
-        <div className="hidden md:grid grid-cols-3 gap-2 px-4 py-3">
-          {TABS.map(tab => (
-            <TabButton key={tab.id} tab={tab} isActive={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} fullWidth />
-          ))}
-        </div>
+        {!singleTab && (
+          <>
+            {/* Mobile: scroll ngang với gradient fade */}
+            <div className="md:hidden relative">
+              <div className="overflow-x-auto px-4 py-3 flex gap-2 no-scrollbar" style={{ scrollbarWidth: "none" }}>
+                {TABS.map(tab => (
+                  <TabButton key={tab.id} tab={tab} isActive={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} />
+                ))}
+              </div>
+              <div className="absolute right-0 top-0 bottom-0 w-8 pointer-events-none" style={{ background: "linear-gradient(to right, transparent, var(--bg))" }} />
+              <div className="absolute left-0 top-0 bottom-0 w-8 pointer-events-none" style={{ background: "linear-gradient(to left, transparent, var(--bg))" }} />
+            </div>
+            {/* Tablet: grid 3 cột */}
+            <div className="hidden md:grid grid-cols-3 gap-2 px-4 py-3">
+              {TABS.map(tab => (
+                <TabButton key={tab.id} tab={tab} isActive={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} fullWidth />
+              ))}
+            </div>
+          </>
+        )}
 
-        <main className="px-4 pb-8">
+        <main className="px-4 pb-8 pt-3">
           <div className="max-w-lg md:max-w-2xl mx-auto rounded-2xl p-5 shadow-sm border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
             <ActiveTab key={activeTab} />
           </div>
@@ -1528,6 +1606,12 @@ export default function Calculator() {
           <div className="max-w-lg md:max-w-2xl mx-auto">
             <BasicCalc />
           </div>
+
+          {singleTab && (
+            <div className="max-w-lg md:max-w-2xl mx-auto mt-4">
+              <RelatedTools currentTab={activeTab} />
+            </div>
+          )}
 
           <div className="max-w-lg md:max-w-2xl mx-auto mt-4">
             <InfoCardsGrid />
@@ -1538,32 +1622,36 @@ export default function Calculator() {
       {/* ═══ DESKTOP LAYOUT ═══ */}
       <div className="hidden lg:block w-full px-6 py-6 flex-1">
         <div className="max-w-7xl mx-auto grid grid-cols-12 gap-6">
-          {/* Sidebar trái: groups */}
+          {/* Sidebar trái: groups (full) hoặc công cụ liên quan (singleTab) */}
           <aside className="col-span-3 sticky top-20 self-start">
-            {TAB_GROUPS.map(group => (
-              <div key={group.id} className="mb-5">
-                <p className="text-xs font-bold uppercase mb-2 px-2 tracking-wide" style={{ color: "var(--text-muted)" }}>
-                  {group.icon} {group.label}
-                </p>
-                <div className="flex flex-col gap-1">
-                  {group.tabs.map(tabId => {
-                    const tab = TABS.find(t => t.id === tabId);
-                    if (!tab) return null;
-                    const isActive = activeTab === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`text-left rounded-lg px-3 py-2 text-sm font-medium transition-all active:scale-95 ${isActive ? "tab-active" : "hover:opacity-80"}`}
-                        style={isActive ? {} : { background: "var(--card)", color: "var(--text)", border: "1px solid var(--border)" }}
-                      >
-                        {tab.icon} {tab.label}
-                      </button>
-                    );
-                  })}
+            {singleTab ? (
+              <RelatedTools currentTab={activeTab} />
+            ) : (
+              TAB_GROUPS.map(group => (
+                <div key={group.id} className="mb-5">
+                  <p className="text-xs font-bold uppercase mb-2 px-2 tracking-wide" style={{ color: "var(--text-muted)" }}>
+                    {group.icon} {group.label}
+                  </p>
+                  <div className="flex flex-col gap-1">
+                    {group.tabs.map(tabId => {
+                      const tab = TABS.find(t => t.id === tabId);
+                      if (!tab) return null;
+                      const isActive = activeTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id)}
+                          className={`text-left rounded-lg px-3 py-2 text-sm font-medium transition-all active:scale-95 ${isActive ? "tab-active" : "hover:opacity-80"}`}
+                          style={isActive ? {} : { background: "var(--card)", color: "var(--text)", border: "1px solid var(--border)" }}
+                        >
+                          {tab.icon} {tab.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </aside>
 
           {/* Main calculator */}
@@ -1581,6 +1669,44 @@ export default function Calculator() {
           </aside>
         </div>
       </div>
+
+      {!singleTab && (
+        <section className="max-w-7xl mx-auto px-4 lg:px-6 py-8">
+          <div className="text-center mb-6">
+            <h2 className="text-xl lg:text-2xl font-bold" style={{ color: "var(--text)" }}>
+              🔗 Mở từng công cụ trên trang riêng
+            </h2>
+            <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
+              Mỗi tool có URL độc lập — chia sẻ link nhanh, bookmark dễ
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {TABS.map((tab) => (
+              <Link
+                key={tab.id}
+                href={TAB_URL_MAP[tab.id]}
+                className="rounded-xl border p-4 transition-all hover:opacity-80 hover:scale-[1.02] active:scale-95"
+                style={{ background: "var(--card)", borderColor: "var(--border)" }}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl shrink-0">{tab.icon}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-sm" style={{ color: "var(--text)" }}>
+                      {tab.label}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                      {TAB_DESCRIPTIONS[tab.id]}
+                    </p>
+                    <p className="text-xs mt-2 font-semibold text-blue-500">
+                      Mở trang riêng →
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <BlogSection />
 
