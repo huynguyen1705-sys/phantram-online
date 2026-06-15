@@ -94,6 +94,9 @@ export default function Page() {
           </div>
         ))}
       </article>
+      <footer className="text-center py-4 text-xs" style={{ color: "var(--text-muted)" }}>
+        © 2026 phantram.online — Công cụ tính % miễn phí
+      </footer>
     </>
   );
 }
