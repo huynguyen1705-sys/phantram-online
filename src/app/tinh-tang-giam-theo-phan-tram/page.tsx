@@ -36,12 +36,13 @@ export default function Page() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <nav className="max-w-7xl mx-auto px-4 lg:px-6 pt-4 text-sm" style={{ color: "var(--text-muted)" }}>
-        <Link href="/" className="hover:underline">Trang chủ</Link>
-        <span className="mx-2">›</span>
-        <span style={{ color: "var(--text)" }}>{NAME}</span>
-      </nav>
-      <Calculator initialTab="increase-decrease" singleTab />
+      <Calculator initialTab="increase-decrease" singleTab breadcrumb={
+        <>
+          <Link href="/" className="hover:underline">Trang chủ</Link>
+          <span className="mx-2">›</span>
+          <span style={{ color: "var(--text)" }}>{NAME}</span>
+        </>
+      } />
       <article className="max-w-3xl mx-auto px-4 lg:px-6 py-8 text-sm leading-relaxed" style={{ color: "var(--text)" }}>
         <h1 className="text-2xl font-bold mb-3">Tăng/giảm 1 số theo phần trăm cho trước</h1>
         <p className="mb-3">

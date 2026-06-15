@@ -1,8 +1,36 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, Suspense, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import BlogSection from "./BlogSection";
 import IntroSEO from "./IntroSEO";
+import ShareModal from "./ShareModal";
+import {
+  buildShareUrl,
+  buildOgImageUrl,
+  decodeBMI,
+  decodeSalaryTax,
+  decodeCompound,
+  decodeDiscount,
+  decodeBreakeven,
+  type DecodedBMI,
+  type DecodedSalaryTax,
+  type DecodedCompound,
+  type DecodedDiscount,
+  type DecodedBreakeven,
+} from "@/lib/share-state";
+
+function ShareButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="mt-3 w-full rounded-xl py-3 text-sm font-semibold transition-all active:scale-95"
+      style={{ background: "var(--bg)", color: "var(--text)", border: "1px solid var(--border)" }}
+    >
+      📤 Share kết quả
+    </button>
+  );
+}
 
 export type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound" | "salary-tax" | "breakeven" | "recipe-scale" | "weight-bmi";
 
@@ -215,13 +243,31 @@ function TabFindBase() {
   );
 }
 
-function TabDiscount() {
-  const [orig, setOrig] = useState(""); const [disc, setDisc] = useState(""); const [copied, setCopied] = useState(false);
+function TabDiscount({ initial }: { initial?: DecodedDiscount } = {}) {
+  const [orig, setOrig] = useState(initial?.original ?? "");
+  const [disc, setDisc] = useState(initial?.discountPercent ?? "");
+  const [copied, setCopied] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const salePrice = orig !== "" && disc !== "" ? parseFloat(orig) * (1 - parseFloat(disc) / 100) : NaN;
   const saved = !isNaN(salePrice) ? parseFloat(orig) - salePrice : NaN;
   const result = isNaN(salePrice) ? "" : `${formatNum(salePrice)} ₫`;
   const formula = result ? `Tiết kiệm: ${formatNum(saved)} ₫ | Giá gốc: ${formatNum(parseFloat(orig))} ₫` : "";
   const copy = () => { navigator.clipboard?.writeText(result); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+
+  const shareData = useMemo(() => {
+    if (isNaN(salePrice)) return null;
+    const state = { tab: "discount" as const, original: orig, discountPercent: disc };
+    return {
+      url: buildShareUrl(state),
+      ogImageUrl: buildOgImageUrl(state),
+      title: "Kết quả tính giảm giá",
+      text: `Giá gốc: ${formatNum(parseFloat(orig))} ₫
+Giảm: ${disc}%
+Giá sale: ${formatNum(salePrice)} ₫
+Tiết kiệm: ${formatNum(saved)} ₫`,
+    };
+  }, [orig, disc, salePrice, saved]);
+
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm" style={{ color: "var(--text-muted)" }}>Giá sale sau khi giảm %</p>
@@ -239,6 +285,19 @@ function TabDiscount() {
             <p className="font-bold text-red-400">{formatNum(saved)} ₫</p>
           </div>
         </div>
+      )}
+      {shareData && (
+        <>
+          <ShareButton onClick={() => setShareOpen(true)} />
+          <ShareModal
+            open={shareOpen}
+            onClose={() => setShareOpen(false)}
+            url={shareData.url}
+            title={shareData.title}
+            text={shareData.text}
+            ogImageUrl={shareData.ogImageUrl}
+          />
+        </>
       )}
     </div>
   );
@@ -426,13 +485,14 @@ function BasicCalc({ compact = false }: { compact?: boolean }) {
   );
 }
 
-function TabCompound() {
-  const [principal, setPrincipal] = useState("");
-  const [rate, setRate] = useState("");
-  const [period, setPeriod] = useState("");
-  const [periodUnit, setPeriodUnit] = useState<"month" | "year">("year");
-  const [compFreq, setCompFreq] = useState<"monthly" | "quarterly" | "yearly">("monthly");
+function TabCompound({ initial }: { initial?: DecodedCompound } = {}) {
+  const [principal, setPrincipal] = useState(initial?.principal ?? "");
+  const [rate, setRate] = useState(initial?.rate ?? "");
+  const [period, setPeriod] = useState(initial?.period ?? "");
+  const [periodUnit, setPeriodUnit] = useState<"month" | "year">(initial?.periodUnit ?? "year");
+  const [compFreq, setCompFreq] = useState<"monthly" | "quarterly" | "yearly">(initial?.compFreq ?? "monthly");
   const [copied, setCopied] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const p = parseFloat(principal);
   const r = parseFloat(rate) / 100;
@@ -509,6 +569,23 @@ function TabCompound() {
           </div>
         </div>
       )}
+      {!isNaN(amount) && (
+        <>
+          <ShareButton onClick={() => setShareOpen(true)} />
+          <ShareModal
+            open={shareOpen}
+            onClose={() => setShareOpen(false)}
+            url={buildShareUrl({ tab: "compound", principal, rate, period, periodUnit, compFreq })}
+            ogImageUrl={buildOgImageUrl({ tab: "compound", principal, rate, period, periodUnit, compFreq })}
+            title="Kết quả tính lãi kép"
+            text={`Vốn gốc: ${formatNum(p)} ₫
+Lãi suất: ${rate}% / ${periodUnit === "month" ? "tháng" : "năm"}
+Kỳ hạn: ${period} ${periodUnit === "month" ? "tháng" : "năm"}
+Tổng tích lũy: ${formatNum(amount)} ₫
+Lãi: ${formatNum(interest)} ₫`}
+          />
+        </>
+      )}
       {yearRows.length > 0 && (
         <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--border)" }}>
           <div className="px-3 py-2 text-xs font-semibold" style={{ background: "var(--border)", color: "var(--text-muted)" }}>Lãi theo từng năm (tối đa 10 năm)</div>
@@ -539,11 +616,12 @@ function TabCompound() {
 }
 
 // ────────── Tab Tính lương Net sau thuế TNCN ──────────
-function TabSalaryTax() {
-  const [gross, setGross] = useState("");
-  const [dependents, setDependents] = useState("0");
+function TabSalaryTax({ initial }: { initial?: DecodedSalaryTax } = {}) {
+  const [gross, setGross] = useState(initial?.gross ?? "");
+  const [dependents, setDependents] = useState(initial?.deps ?? "0");
   const [showDetail, setShowDetail] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const g = parseFloat(gross);
   const dep = parseInt(dependents) || 0;
@@ -611,6 +689,23 @@ function TabSalaryTax() {
       <NumInput label="Lương Gross (₫/tháng)" value={gross} onChange={setGross} placeholder="VD: 25000000" />
       <NumInput label="Số người phụ thuộc" value={dependents} onChange={setDependents} placeholder="VD: 0" />
       <ResultBox result={result} formula={formula} onCopy={copy} copied={copied} />
+      {!isNaN(net) && (
+        <>
+          <ShareButton onClick={() => setShareOpen(true)} />
+          <ShareModal
+            open={shareOpen}
+            onClose={() => setShareOpen(false)}
+            url={buildShareUrl({ tab: "salary-tax", gross, deps: dependents })}
+            ogImageUrl={buildOgImageUrl({ tab: "salary-tax", gross, deps: dependents })}
+            title="Kết quả tính lương NET"
+            text={`Lương Gross: ${formatNum(g)} ₫/tháng
+Phụ thuộc: ${dep}
+Thuế TNCN: ${formatNum(tax)} ₫
+Bảo hiểm: ${formatNum(totalInsurance)} ₫
+Lương NET: ${formatNum(net)} ₫ (≈ ${netPct.toFixed(1)}% Gross)`}
+          />
+        </>
+      )}
       {!isNaN(net) && (
         <>
           <div className="grid grid-cols-3 gap-2">
@@ -697,21 +792,22 @@ function TabSalaryTax() {
 }
 
 // ────────── Tab Hoàn vốn / Break-even ──────────
-function TabBreakeven() {
-  const [mode, setMode] = useState<"recovery" | "sales" | "invest">("recovery");
+function TabBreakeven({ initial }: { initial?: DecodedBreakeven } = {}) {
+  const [mode, setMode] = useState<"recovery" | "sales" | "invest">(initial?.mode ?? "recovery");
   const [copied, setCopied] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   // Mode A — Recovery (bù lỗ)
-  const [loss, setLoss] = useState("");
+  const [loss, setLoss] = useState(initial?.loss ?? "");
   const lossNum = parseFloat(loss);
   const recovery = loss !== "" && !isNaN(lossNum) && lossNum < 100 && lossNum > 0
     ? (lossNum / (100 - lossNum)) * 100
     : NaN;
 
   // Mode B — Sales BEP
-  const [fc, setFc] = useState("");
-  const [price, setPrice] = useState("");
-  const [vc, setVc] = useState("");
+  const [fc, setFc] = useState(initial?.fc ?? "");
+  const [price, setPrice] = useState(initial?.price ?? "");
+  const [vc, setVc] = useState(initial?.vc ?? "");
   const fcN = parseFloat(fc), priceN = parseFloat(price), vcN = parseFloat(vc);
   const margin = price !== "" && vc !== "" ? priceN - vcN : NaN;
   const marginPct = !isNaN(margin) && priceN > 0 ? (margin / priceN) * 100 : NaN;
@@ -719,8 +815,8 @@ function TabBreakeven() {
   const bepRevenue = !isNaN(bepUnits) ? bepUnits * priceN : NaN;
 
   // Mode C — Investment payback
-  const [capital, setCapital] = useState("");
-  const [monthlyProfit, setMonthlyProfit] = useState("");
+  const [capital, setCapital] = useState(initial?.capital ?? "");
+  const [monthlyProfit, setMonthlyProfit] = useState(initial?.monthlyProfit ?? "");
   const capN = parseFloat(capital), profitN = parseFloat(monthlyProfit);
   const months = capital !== "" && monthlyProfit !== "" && profitN > 0 ? capN / profitN : NaN;
   const years = !isNaN(months) ? months / 12 : NaN;
@@ -740,6 +836,49 @@ function TabBreakeven() {
   }
   const copy = () => { navigator.clipboard?.writeText(result); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
+  // Share payload (mode-specific)
+  const hasValidResult = (mode === "recovery" && !isNaN(recovery)) ||
+    (mode === "sales" && !isNaN(bepUnits)) ||
+    (mode === "invest" && !isNaN(months));
+  const shareUrl = hasValidResult ? buildShareUrl({
+    tab: "breakeven", mode,
+    loss: mode === "recovery" ? loss : undefined,
+    fc: mode === "sales" ? fc : undefined,
+    price: mode === "sales" ? price : undefined,
+    vc: mode === "sales" ? vc : undefined,
+    capital: mode === "invest" ? capital : undefined,
+    monthlyProfit: mode === "invest" ? monthlyProfit : undefined,
+  }) : "";
+  const ogImageUrl = hasValidResult ? buildOgImageUrl({
+    tab: "breakeven", mode,
+    loss: mode === "recovery" ? loss : undefined,
+    fc: mode === "sales" ? fc : undefined,
+    price: mode === "sales" ? price : undefined,
+    vc: mode === "sales" ? vc : undefined,
+    capital: mode === "invest" ? capital : undefined,
+    monthlyProfit: mode === "invest" ? monthlyProfit : undefined,
+  }) : "";
+  let shareTitle = "Kết quả hoan vốn / BEP";
+  let shareText = "";
+  if (mode === "recovery" && !isNaN(recovery)) {
+    shareTitle = "Kết quả bù lỗ";
+    shareText = `Mức lỗ: -${loss}%
+Cần lãi: +${formatNum(recovery)}% để hoà vốn`;
+  } else if (mode === "sales" && !isNaN(bepUnits)) {
+    shareTitle = "Điểm hoà vốn (BEP)";
+    shareText = `Chi phí cố định: ${formatNum(fcN)} ₫
+Giá bán: ${formatNum(priceN)} ₫ | Biến đổi: ${formatNum(vcN)} ₫
+BEP: ${formatNum(bepUnits)} sản phẩm
+Doanh thu BEP: ${formatNum(bepRevenue)} ₫
+Margin: ${formatNum(marginPct)}%`;
+  } else if (mode === "invest" && !isNaN(months)) {
+    shareTitle = "Thời gian hoàn vốn";
+    shareText = `Vốn đầu tư: ${formatNum(capN)} ₫
+Lợi nhuận/tháng: ${formatNum(profitN)} ₫
+Hoàn vốn: ${formatNum(months)} tháng (≈ ${formatNum(years)} năm)
+ROI/năm: ${formatNum(roiYear)}%`;
+  }
+
   const recoveryTable = [
     { loss: 10, need: 10 / 90 * 100 },
     { loss: 20, need: 20 / 80 * 100 },
@@ -758,10 +897,21 @@ function TabBreakeven() {
         <button onClick={() => setMode("invest")} className={`flex-1 rounded-xl py-2.5 text-xs font-semibold transition-all ${mode === "invest" ? "tab-active" : ""}`} style={mode === "invest" ? {} : { background: "var(--border)", color: "var(--text)" }}>Đầu tư</button>
       </div>
 
+      {hasValidResult && (
+        <ShareModal
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          url={shareUrl}
+          ogImageUrl={ogImageUrl}
+          title={shareTitle}
+          text={shareText}
+        />
+      )}
       {mode === "recovery" && (
         <>
           <NumInput label="% đã lỗ" value={loss} onChange={setLoss} placeholder="VD: 20" suffix="%" />
           <ResultBox result={result} formula={formula} onCopy={copy} copied={copied} />
+          {!isNaN(recovery) && <ShareButton onClick={() => setShareOpen(true)} />}
           <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--border)" }}>
             <div className="px-3 py-2 text-xs font-semibold" style={{ background: "var(--border)", color: "var(--text-muted)" }}>Bảng % cần tăng để hòa vốn</div>
             <div className="overflow-x-auto">
@@ -795,6 +945,7 @@ function TabBreakeven() {
           <NumInput label="Giá bán / sản phẩm (₫)" value={price} onChange={setPrice} placeholder="VD: 200000" />
           <NumInput label="Chi phí biến đổi / sản phẩm (₫)" value={vc} onChange={setVc} placeholder="VD: 120000" />
           <ResultBox result={result} formula={formula} onCopy={copy} copied={copied} />
+          {!isNaN(bepUnits) && <ShareButton onClick={() => setShareOpen(true)} />}
           {!isNaN(bepUnits) && (
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
@@ -822,6 +973,7 @@ function TabBreakeven() {
           <NumInput label="Vốn đầu tư ban đầu (₫)" value={capital} onChange={setCapital} placeholder="VD: 500000000" />
           <NumInput label="Lợi nhuận / tháng (₫)" value={monthlyProfit} onChange={setMonthlyProfit} placeholder="VD: 8000000" />
           <ResultBox result={result} formula={formula} onCopy={copy} copied={copied} />
+          {!isNaN(months) && <ShareButton onClick={() => setShareOpen(true)} />}
           {!isNaN(months) && (
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
@@ -1016,17 +1168,23 @@ function bmiCategory(bmi: number): { label: string; color: string; textClass: st
   return { label: "Béo phì độ II+", color: "#ef4444", textClass: "text-red-500", bgClass: "bg-red-500/10" };
 }
 
-function TabWeightBMI() {
-  const [mode, setMode] = useState<"bmi" | "goal" | "calorie">("bmi");
-  const [sex, setSex] = useState<"male" | "female">("male");
-  const [height, setHeight] = useState("");
-  const [weight, setWeight] = useState("");
-  const [age, setAge] = useState("");
-  const [activity, setActivity] = useState<1.2 | 1.375 | 1.55 | 1.725 | 1.9>(1.55);
-  const [goalMode, setGoalMode] = useState<"percent" | "absolute">("percent");
-  const [goalPercent, setGoalPercent] = useState("");
-  const [goalWeight, setGoalWeight] = useState("");
+function TabWeightBMI({ initial }: { initial?: DecodedBMI } = {}) {
+  const [mode, setMode] = useState<"bmi" | "goal" | "calorie">(initial?.mode ?? "bmi");
+  const [sex, setSex] = useState<"male" | "female">(initial?.sex ?? "male");
+  const [height, setHeight] = useState(initial?.height ?? "");
+  const [weight, setWeight] = useState(initial?.weight ?? "");
+  const [age, setAge] = useState(initial?.age ?? "");
+  const initialActivity = (() => {
+    const n = parseFloat(initial?.activity ?? "");
+    if (n === 1.2 || n === 1.375 || n === 1.55 || n === 1.725 || n === 1.9) return n;
+    return 1.55;
+  })();
+  const [activity, setActivity] = useState<1.2 | 1.375 | 1.55 | 1.725 | 1.9>(initialActivity);
+  const [goalMode, setGoalMode] = useState<"percent" | "absolute">(initial?.goalMode ?? "percent");
+  const [goalPercent, setGoalPercent] = useState(initial?.goalPercent ?? "");
+  const [goalWeight, setGoalWeight] = useState(initial?.goalWeight ?? "");
   const [copied, setCopied] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const hN = parseFloat(height);
   const wN = parseFloat(weight);
@@ -1097,6 +1255,46 @@ function TabWeightBMI() {
   }
   const copy = () => { navigator.clipboard?.writeText(`${result}\n${formula}`); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
+  const hasBMIResult = mode === "bmi" && !isNaN(bmi);
+  const hasGoalResult = mode === "goal" && !isNaN(targetWeight);
+  const hasCalorieResult = mode === "calorie" && !isNaN(tdee);
+  const hasShareableResult = hasBMIResult || hasGoalResult || hasCalorieResult;
+  const bmiShareState = {
+    tab: "weight-bmi" as const,
+    mode,
+    sex,
+    height: height || undefined,
+    weight: weight || undefined,
+    age: age || undefined,
+    activity: String(activity),
+    goalMode,
+    goalPercent: goalPercent || undefined,
+    goalWeight: goalWeight || undefined,
+  };
+  const shareUrl = hasShareableResult ? buildShareUrl(bmiShareState) : "";
+  const ogImageUrl = hasShareableResult ? buildOgImageUrl(bmiShareState) : "";
+  let shareTitle = "Kết quả cân nặng / BMI";
+  let shareText = "";
+  if (hasBMIResult && cat) {
+    shareTitle = "Kết quả BMI";
+    shareText = `BMI: ${bmi.toFixed(1)} — ${cat.label}
+Chiều cao: ${height}cm • Cân nặng: ${weight}kg
+Cân lý tưởng: ${formatNum(idealMin)}–${formatNum(idealMax)} kg`;
+  } else if (hasGoalResult) {
+    shareTitle = "Mục tiêu giảm cân";
+    shareText = `Cân hiện tại: ${weight}kg
+Cân đích: ${formatNum(targetWeight)} kg
+Cần giảm: ${formatNum(lossKg)} kg (${formatNum(effectivePct)}%)
+Thời gian: ${formatNum(weeksFast)}–${formatNum(weeksSlow)} tuần`;
+  } else if (hasCalorieResult) {
+    shareTitle = "TDEE & calo giảm cân";
+    shareText = `BMR: ${formatNum(bmr)} kcal/ngày
+TDEE: ${formatNum(tdee)} kcal/ngày
+Giảm chậm: ${formatNum(cal300)} kcal
+Trung bình: ${formatNum(cal500)} kcal
+Nhanh: ${formatNum(cal750)} kcal`;
+  }
+
   const diffMsg = (() => {
     if (isNaN(bmi) || !cat || isNaN(idealMin) || isNaN(idealMax)) return "";
     if (bmi < 18.5) return `Tăng ${formatNum(idealMin - wN)} kg để vào ngưỡng bình thường`;
@@ -1113,6 +1311,16 @@ function TabWeightBMI() {
 
   return (
     <div className="flex flex-col gap-4">
+      {hasShareableResult && (
+        <ShareModal
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          url={shareUrl}
+          ogImageUrl={ogImageUrl}
+          title={shareTitle}
+          text={shareText}
+        />
+      )}
       <p className="text-sm" style={{ color: "var(--text-muted)" }}>Tính BMI, mục tiêu giảm cân theo %, hoặc calo TDEE để giảm cân an toàn.</p>
       <div className="flex gap-2">
         <button onClick={() => setMode("bmi")} className={`flex-1 rounded-xl py-2.5 text-xs font-semibold transition-all ${mode === "bmi" ? "tab-active" : ""}`} style={mode === "bmi" ? {} : { background: "var(--border)", color: "var(--text)" }}>BMI</button>
@@ -1197,6 +1405,7 @@ function TabWeightBMI() {
           <p className="text-xs" style={{ color: "var(--text-muted)" }}>
             💡 Công thức: <strong>BMI = Cân nặng (kg) ÷ (Chiều cao m)²</strong>. Chuẩn WHO Asia-Pacific cho người châu Á.
           </p>
+          {hasBMIResult && <ShareButton onClick={() => setShareOpen(true)} />}
         </>
       )}
 
@@ -1284,6 +1493,7 @@ function TabWeightBMI() {
           <p className="text-xs" style={{ color: "var(--text-muted)" }}>
             💡 An toàn: <strong>0.5–1 kg/tuần</strong>. Tổng không quá 5–10% trong 6 tháng để duy trì lâu dài.
           </p>
+          {hasGoalResult && <ShareButton onClick={() => setShareOpen(true)} />}
         </>
       )}
 
@@ -1374,27 +1584,30 @@ function TabWeightBMI() {
           <p className="text-xs" style={{ color: "var(--text-muted)" }}>
             💡 Công thức Mifflin-St Jeor: <strong>Nam: 10×kg + 6.25×cm − 5×tuổi + 5</strong>. <strong>Nữ: −161</strong>. TDEE = BMR × hệ số vận động. 1 kg mỡ ≈ 7700 kcal.
           </p>
+          {hasCalorieResult && <ShareButton onClick={() => setShareOpen(true)} />}
         </>
       )}
     </div>
   );
 }
 
+// TAB_COMPONENTS map kept for non-shareable tabs.
+// Shareable tabs (discount, compound, salary-tax, breakeven, weight-bmi) accept an optional `initial` prop.
 const TAB_COMPONENTS: Record<TabId, React.FC> = {
   "percent-of": TabPercentOf,
   "what-percent": TabWhatPercent,
   "change": TabChange,
   "increase-decrease": TabIncreaseDecrease,
   "find-base": TabFindBase,
-  "discount": TabDiscount,
+  "discount": TabDiscount as unknown as React.FC,
   "compare": TabCompare,
   "tip": TabTip,
   "interest": TabInterest,
-  "compound": TabCompound,
-  "salary-tax": TabSalaryTax,
-  "breakeven": TabBreakeven,
+  "compound": TabCompound as unknown as React.FC,
+  "salary-tax": TabSalaryTax as unknown as React.FC,
+  "breakeven": TabBreakeven as unknown as React.FC,
   "recipe-scale": TabRecipeScale,
-  "weight-bmi": TabWeightBMI,
+  "weight-bmi": TabWeightBMI as unknown as React.FC,
 };
 
 // ────────── Shared UI pieces ──────────
@@ -1512,13 +1725,37 @@ function RelatedTools({ currentTab }: { currentTab: TabId }) {
 interface CalculatorProps {
   initialTab?: TabId;
   singleTab?: boolean;
+  breadcrumb?: ReactNode;
 }
 
-export default function Calculator({ initialTab, singleTab = false }: CalculatorProps = {}) {
+export default function Calculator(props: CalculatorProps = {}) {
+  return (
+    <Suspense fallback={null}>
+      <CalculatorInner {...props} />
+    </Suspense>
+  );
+}
+
+function CalculatorInner({ initialTab, singleTab = false, breadcrumb }: CalculatorProps) {
   const [activeTab, setActiveTab] = useState<TabId>(initialTab ?? "percent-of");
   const [dark, setDark] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const searchParams = useSearchParams();
+
+  // Decode shareable state from URL once per (initialTab, searchParams) change.
+  const decoded = useMemo(() => {
+    if (!initialTab || !searchParams) return null;
+    const p = searchParams;
+    switch (initialTab) {
+      case "weight-bmi":   return { tab: initialTab, data: decodeBMI(p) };
+      case "salary-tax":   return { tab: initialTab, data: decodeSalaryTax(p) };
+      case "compound":     return { tab: initialTab, data: decodeCompound(p) };
+      case "discount":     return { tab: initialTab, data: decodeDiscount(p) };
+      case "breakeven":    return { tab: initialTab, data: decodeBreakeven(p) };
+      default: return null;
+    }
+  }, [initialTab, searchParams]);
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -1539,6 +1776,15 @@ export default function Calculator({ initialTab, singleTab = false }: Calculator
   };
 
   const ActiveTab = TAB_COMPONENTS[activeTab];
+
+  // Render helper: pass decoded initial when active tab matches decoded.tab
+  const renderActiveTab = () => {
+    if (decoded && decoded.tab === activeTab) {
+      const Comp = ActiveTab as React.FC<{ initial?: unknown }>;
+      return <Comp key={activeTab} initial={decoded.data} />;
+    }
+    return <ActiveTab key={activeTab} />;
+  };
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
@@ -1567,6 +1813,15 @@ export default function Calculator({ initialTab, singleTab = false }: Calculator
           </div>
         </div>
       </header>
+
+      {/* Breadcrumb (under header, non-sticky) */}
+      {breadcrumb && (
+        <div className="border-b" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+          <div className="max-w-7xl mx-auto px-4 lg:px-6 py-2.5 text-sm" style={{ color: "var(--text-muted)" }}>
+            {breadcrumb}
+          </div>
+        </div>
+      )}
 
       {/* History panel — chỉ mobile/tablet khi toggle */}
       {showHistory && (
@@ -1600,7 +1855,7 @@ export default function Calculator({ initialTab, singleTab = false }: Calculator
 
         <main className="px-4 pb-8 pt-3">
           <div className="max-w-lg md:max-w-2xl mx-auto rounded-2xl p-5 shadow-sm border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-            <ActiveTab key={activeTab} />
+            {renderActiveTab()}
           </div>
 
           <div className="max-w-lg md:max-w-2xl mx-auto">
@@ -1657,7 +1912,7 @@ export default function Calculator({ initialTab, singleTab = false }: Calculator
           {/* Main calculator */}
           <section className="col-span-6">
             <div className="rounded-2xl p-6 shadow-sm border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-              <ActiveTab key={activeTab} />
+              {renderActiveTab()}
             </div>
           </section>
 

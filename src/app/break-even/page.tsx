@@ -12,8 +12,8 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESC,
   alternates: { canonical: `https://phantram.online${URL_PATH}` },
-  openGraph: { title: TITLE, description: DESC, url: `https://phantram.online${URL_PATH}`, siteName: "phantram.online", images: [{ url: "/og-image.jpg", width: 1200, height: 630 }], locale: "vi_VN", type: "website" },
-  twitter: { card: "summary_large_image", title: TITLE, description: DESC, images: ["/og-image.jpg"] },
+  openGraph: { title: TITLE, description: DESC, url: `https://phantram.online${URL_PATH}`, siteName: "phantram.online", locale: "vi_VN", type: "website" },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESC },
 };
 
 const FAQ = [
@@ -36,12 +36,13 @@ export default function Page() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <nav className="max-w-7xl mx-auto px-4 lg:px-6 pt-4 text-sm" style={{ color: "var(--text-muted)" }}>
-        <Link href="/" className="hover:underline">Trang chủ</Link>
-        <span className="mx-2">›</span>
-        <span style={{ color: "var(--text)" }}>{NAME}</span>
-      </nav>
-      <Calculator initialTab="breakeven" singleTab />
+      <Calculator initialTab="breakeven" singleTab breadcrumb={
+        <>
+          <Link href="/" className="hover:underline">Trang chủ</Link>
+          <span className="mx-2">›</span>
+          <span style={{ color: "var(--text)" }}>{NAME}</span>
+        </>
+      } />
       <article className="max-w-3xl mx-auto px-4 lg:px-6 py-8 text-sm leading-relaxed" style={{ color: "var(--text)" }}>
         <h1 className="text-2xl font-bold mb-3">Tính điểm hoàn vốn Break-even cho kinh doanh & đầu tư</h1>
         <p className="mb-3">
