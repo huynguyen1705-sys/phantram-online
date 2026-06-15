@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 const BLOG_DOMAIN = "https://blog.phantram.online";
 
 export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+  const { pathname, search } = req.nextUrl;
 
   // Redirect /blog/* → blog.phantram.online/*
   if (pathname === "/blog" || pathname === "/blog/") {
@@ -25,6 +25,15 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(`${BLOG_DOMAIN}${pathname}`, 301);
   }
 
+  // Forward URL info to OG image routes via headers
+  // (opengraph-image.tsx file convention doesn't receive searchParams natively)
+  if (pathname.endsWith("/opengraph-image")) {
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set("x-pathname", pathname);
+    requestHeaders.set("x-search", search || "");
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
   return NextResponse.next();
 }
 
@@ -37,5 +46,6 @@ export const config = {
     "/wp-json/:path*",
     "/wp-content/:path*",
     "/wp-includes/:path*",
+    "/:path*/opengraph-image",
   ],
 };
