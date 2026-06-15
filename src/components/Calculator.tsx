@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import BlogSection from "./BlogSection";
 import IntroSEO from "./IntroSEO";
 
-type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound" | "salary-tax";
+type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound" | "salary-tax" | "breakeven";
 
 interface HistoryItem {
   id: number;
@@ -24,6 +24,7 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "interest", label: "Lãi suất đơn", icon: "💰" },
   { id: "compound", label: "Lãi kép", icon: "📈" },
   { id: "salary-tax", label: "Lương Net (Thuế TNCN)", icon: "💼" },
+  { id: "breakeven", label: "Hoàn vốn / Break-even", icon: "📉" },
 ];
 
 function formatNum(n: number): string {
@@ -651,6 +652,157 @@ function TabSalaryTax() {
   );
 }
 
+// ────────── Tab Hoàn vốn / Break-even ──────────
+function TabBreakeven() {
+  const [mode, setMode] = useState<"recovery" | "sales" | "invest">("recovery");
+  const [copied, setCopied] = useState(false);
+
+  // Mode A — Recovery (bù lỗ)
+  const [loss, setLoss] = useState("");
+  const lossNum = parseFloat(loss);
+  const recovery = loss !== "" && !isNaN(lossNum) && lossNum < 100 && lossNum > 0
+    ? (lossNum / (100 - lossNum)) * 100
+    : NaN;
+
+  // Mode B — Sales BEP
+  const [fc, setFc] = useState("");
+  const [price, setPrice] = useState("");
+  const [vc, setVc] = useState("");
+  const fcN = parseFloat(fc), priceN = parseFloat(price), vcN = parseFloat(vc);
+  const margin = price !== "" && vc !== "" ? priceN - vcN : NaN;
+  const marginPct = !isNaN(margin) && priceN > 0 ? (margin / priceN) * 100 : NaN;
+  const bepUnits = fc !== "" && !isNaN(margin) && margin > 0 ? fcN / margin : NaN;
+  const bepRevenue = !isNaN(bepUnits) ? bepUnits * priceN : NaN;
+
+  // Mode C — Investment payback
+  const [capital, setCapital] = useState("");
+  const [monthlyProfit, setMonthlyProfit] = useState("");
+  const capN = parseFloat(capital), profitN = parseFloat(monthlyProfit);
+  const months = capital !== "" && monthlyProfit !== "" && profitN > 0 ? capN / profitN : NaN;
+  const years = !isNaN(months) ? months / 12 : NaN;
+  const roiYear = !isNaN(months) && capN > 0 ? ((profitN * 12) / capN) * 100 : NaN;
+
+  let result = "";
+  let formula = "";
+  if (mode === "recovery") {
+    result = isNaN(recovery) ? "" : `Cần tăng ${formatNum(recovery)}%`;
+    formula = result ? `${loss}% ÷ (100 − ${loss}%) × 100 = ${formatNum(recovery)}%` : "";
+  } else if (mode === "sales") {
+    result = isNaN(bepUnits) ? "" : `${formatNum(bepUnits)} sản phẩm`;
+    formula = result ? `Doanh thu hòa vốn: ${formatNum(bepRevenue)} ₫ | Margin: ${formatNum(margin)} ₫ (${formatNum(marginPct)}%)` : "";
+  } else {
+    result = isNaN(months) ? "" : `${formatNum(months)} tháng (~${formatNum(years)} năm)`;
+    formula = result ? `ROI/năm: ${formatNum(roiYear)}% | Vốn: ${formatNum(capN)} ₫ | Lợi nhuận/tháng: ${formatNum(profitN)} ₫` : "";
+  }
+  const copy = () => { navigator.clipboard?.writeText(result); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+
+  const recoveryTable = [
+    { loss: 10, need: 10 / 90 * 100 },
+    { loss: 20, need: 20 / 80 * 100 },
+    { loss: 30, need: 30 / 70 * 100 },
+    { loss: 50, need: 50 / 50 * 100 },
+    { loss: 70, need: 70 / 30 * 100 },
+    { loss: 90, need: 90 / 10 * 100 },
+  ];
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm" style={{ color: "var(--text-muted)" }}>Tính % bù lỗ, điểm hòa vốn bán hàng, hoặc thời gian hoàn vốn đầu tư</p>
+      <div className="flex gap-2">
+        <button onClick={() => setMode("recovery")} className={`flex-1 rounded-xl py-2.5 text-xs font-semibold transition-all ${mode === "recovery" ? "tab-active" : ""}`} style={mode === "recovery" ? {} : { background: "var(--border)", color: "var(--text)" }}>Bù lỗ</button>
+        <button onClick={() => setMode("sales")} className={`flex-1 rounded-xl py-2.5 text-xs font-semibold transition-all ${mode === "sales" ? "tab-active" : ""}`} style={mode === "sales" ? {} : { background: "var(--border)", color: "var(--text)" }}>BEP bán hàng</button>
+        <button onClick={() => setMode("invest")} className={`flex-1 rounded-xl py-2.5 text-xs font-semibold transition-all ${mode === "invest" ? "tab-active" : ""}`} style={mode === "invest" ? {} : { background: "var(--border)", color: "var(--text)" }}>Đầu tư</button>
+      </div>
+
+      {mode === "recovery" && (
+        <>
+          <NumInput label="% đã lỗ" value={loss} onChange={setLoss} placeholder="VD: 20" suffix="%" />
+          <ResultBox result={result} formula={formula} onCopy={copy} copied={copied} />
+          <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--border)" }}>
+            <div className="px-3 py-2 text-xs font-semibold" style={{ background: "var(--border)", color: "var(--text-muted)" }}>Bảng % cần tăng để hòa vốn</div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr style={{ background: "var(--bg)" }}>
+                    <th className="px-3 py-2 text-left text-xs" style={{ color: "var(--text-muted)" }}>Lỗ</th>
+                    <th className="px-3 py-2 text-right text-xs" style={{ color: "var(--text-muted)" }}>Cần tăng</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recoveryTable.map((row, i) => (
+                    <tr key={row.loss} style={{ background: i % 2 === 0 ? "var(--card)" : "var(--bg)" }}>
+                      <td className="px-3 py-2 font-semibold text-red-400">−{row.loss}%</td>
+                      <td className="px-3 py-2 text-right font-medium text-green-500">+{formatNum(row.need)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+            💡 Công thức: <strong>% bù = Lỗ% ÷ (100 − Lỗ%) × 100</strong>. Lỗ càng lớn cần tăng càng nhiều để hòa vốn.
+          </p>
+        </>
+      )}
+
+      {mode === "sales" && (
+        <>
+          <NumInput label="Chi phí cố định / tháng (₫)" value={fc} onChange={setFc} placeholder="VD: 50000000" />
+          <NumInput label="Giá bán / sản phẩm (₫)" value={price} onChange={setPrice} placeholder="VD: 200000" />
+          <NumInput label="Chi phí biến đổi / sản phẩm (₫)" value={vc} onChange={setVc} placeholder="VD: 120000" />
+          <ResultBox result={result} formula={formula} onCopy={copy} copied={copied} />
+          {!isNaN(bepUnits) && (
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
+                <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Sản phẩm BEP</p>
+                <p className="font-bold text-sm" style={{ color: "var(--primary)" }}>{formatNum(bepUnits)}</p>
+              </div>
+              <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
+                <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Doanh thu BEP</p>
+                <p className="font-bold text-sm text-green-500">{formatNum(bepRevenue)} ₫</p>
+              </div>
+              <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
+                <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Margin</p>
+                <p className="font-bold text-sm text-orange-400">{formatNum(marginPct)}%</p>
+              </div>
+            </div>
+          )}
+          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+            💡 Công thức: <strong>BEP = FC ÷ (Giá bán − Chi phí biến đổi)</strong>. Bán đủ số SP này là hòa vốn.
+          </p>
+        </>
+      )}
+
+      {mode === "invest" && (
+        <>
+          <NumInput label="Vốn đầu tư ban đầu (₫)" value={capital} onChange={setCapital} placeholder="VD: 500000000" />
+          <NumInput label="Lợi nhuận / tháng (₫)" value={monthlyProfit} onChange={setMonthlyProfit} placeholder="VD: 8000000" />
+          <ResultBox result={result} formula={formula} onCopy={copy} copied={copied} />
+          {!isNaN(months) && (
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
+                <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Số tháng</p>
+                <p className="font-bold text-sm" style={{ color: "var(--primary)" }}>{formatNum(months)}</p>
+              </div>
+              <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
+                <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Số năm</p>
+                <p className="font-bold text-sm text-orange-400">{formatNum(years)}</p>
+              </div>
+              <div className="rounded-xl p-3 text-center" style={{ background: "var(--border)" }}>
+                <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>ROI / năm</p>
+                <p className="font-bold text-sm text-green-500">{formatNum(roiYear)}%</p>
+              </div>
+            </div>
+          )}
+          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+            💡 Công thức: <strong>Số tháng hoàn vốn = Vốn ÷ Lợi nhuận/tháng</strong>. ROI/năm = (Lợi nhuận × 12) ÷ Vốn × 100%.
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
 const TAB_COMPONENTS: Record<TabId, React.FC> = {
   "percent-of": TabPercentOf,
   "what-percent": TabWhatPercent,
@@ -663,6 +815,7 @@ const TAB_COMPONENTS: Record<TabId, React.FC> = {
   "interest": TabInterest,
   "compound": TabCompound,
   "salary-tax": TabSalaryTax,
+  "breakeven": TabBreakeven,
 };
 
 export default function Calculator() {

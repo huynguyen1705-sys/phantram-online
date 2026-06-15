@@ -84,6 +84,13 @@ export default function IntroSEO() {
             </p>
           </details>
           <details className="cursor-pointer">
+            <summary className="font-semibold">Lỗ 20% cần lãi bao nhiêu % để hòa vốn?</summary>
+            <p className="mt-1.5 ml-1" style={{ color: "var(--text-muted)" }}>
+              Cần tăng 25%. Công thức: % bù = lỗ% ÷ (100 − lỗ%) × 100. Lỗ càng lớn cần tăng càng nhiều:
+              lỗ 50% cần lãi 100% mới hòa.
+            </p>
+          </details>
+          <details className="cursor-pointer">
             <summary className="font-semibold">Học cách tính phần trăm ở đâu?</summary>
             <p className="mt-1.5 ml-1" style={{ color: "var(--text-muted)" }}>
               Xem chi tiết tại{" "}
