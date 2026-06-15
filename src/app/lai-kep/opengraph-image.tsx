@@ -55,7 +55,7 @@ export default async function Image({ searchParams }: { searchParams?: SP } = {}
           <div style={{ width: 56, height: 56, background: "#2563eb", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 900, marginRight: 18 }}>%</div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 26, fontWeight: 700 }}>phantram.online</div>
-            <div style={{ fontSize: 16, opacity: 0.7 }}>Lãi kép — A = P(1 + r/n)ⁿᵗ</div>
+            <div style={{ fontSize: 16, opacity: 0.7 }}>Lãi kép — A = P(1 + r/n)^(nt)</div>
           </div>
         </div>
 
