@@ -34,7 +34,7 @@ const BLOG_SLUGS = [
   "phan-tram-trong-tai-chinh",
 ];
 
-// 14 standalone tool URLs
+// 16 standalone tool URLs
 const TOOL_SLUGS = [
   "tinh-phan-tram",
   "bao-nhieu-phan-tram",
@@ -51,6 +51,7 @@ const TOOL_SLUGS = [
   "scale-cong-thuc",
   "bmi",
   "phan-tram-thoi-gian",
+  "soi-sale",
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

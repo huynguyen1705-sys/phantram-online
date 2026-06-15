@@ -36,7 +36,7 @@ function ShareButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-export type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound" | "salary-tax" | "breakeven" | "recipe-scale" | "weight-bmi" | "time-progress";
+export type TabId = "percent-of" | "what-percent" | "change" | "increase-decrease" | "find-base" | "discount" | "compare" | "tip" | "interest" | "compound" | "salary-tax" | "breakeven" | "recipe-scale" | "weight-bmi" | "time-progress" | "soi-sale";
 
 export const TAB_URL_MAP: Record<TabId, string> = {
   "percent-of": "/tinh-phan-tram",
@@ -54,6 +54,7 @@ export const TAB_URL_MAP: Record<TabId, string> = {
   "recipe-scale": "/scale-cong-thuc",
   "weight-bmi": "/bmi",
   "time-progress": "/phan-tram-thoi-gian",
+  "soi-sale": "/soi-sale",
 };
 
 export const TAB_DESCRIPTIONS: Record<TabId, string> = {
@@ -72,6 +73,7 @@ export const TAB_DESCRIPTIONS: Record<TabId, string> = {
   "recipe-scale": "Scale công thức nấu ăn cho nhiều/ít người ăn",
   "weight-bmi": "Tính BMI chuẩn châu Á + mục tiêu giảm cân + TDEE calo",
   "time-progress": "Tính % đã qua của năm, tháng, ngày — share Facebook",
+  "soi-sale": "Soi sale Shopee/Lazada/Tiki — phát hiện fake giá, tính giá cuối thực sự",
 };
 
 interface HistoryItem {
@@ -97,12 +99,13 @@ export const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "recipe-scale", label: "Scale công thức", icon: "🍳" },
   { id: "weight-bmi", label: "Giảm cân & BMI", icon: "⚖️" },
   { id: "time-progress", label: "% Thời gian", icon: "📅" },
+  { id: "soi-sale", label: "Soi sale Shopee/Lazada", icon: "🛒" },
 ];
 
 export const TAB_GROUPS: { id: string; label: string; icon: string; tabs: TabId[] }[] = [
   { id: "basic", label: "Cơ bản", icon: "🧮", tabs: ["percent-of", "what-percent", "change", "increase-decrease", "find-base"] },
   { id: "finance", label: "Tài chính", icon: "💰", tabs: ["interest", "compound", "salary-tax", "breakeven"] },
-  { id: "shopping", label: "Mua sắm", icon: "🛒", tabs: ["discount", "compare", "tip"] },
+  { id: "shopping", label: "Mua sắm", icon: "🛒", tabs: ["discount", "compare", "tip", "soi-sale"] },
   { id: "daily", label: "Tiện ích", icon: "🛠", tabs: ["recipe-scale", "weight-bmi"] },
   { id: "time", label: "Thời gian", icon: "📅", tabs: ["time-progress"] },
 ];
@@ -2527,6 +2530,332 @@ function TabTimeProgress({ initial }: { initial?: DecodedTimeProgress } = {}) {
   );
 }
 
+// ────────── Tab: Soi Sale (Shopee/Lazada/Tiki anti-fake-sale) ──────────
+
+type SoiSaleRow = {
+  id: string;
+  name: string;
+  price: string;       // giá hiện tại
+  origPrice: string;   // giá gạch chéo (sàn claim)
+  lowest30: string;    // giá thấp nhất 30 ngày (user nhớ / kiểm tra)
+  voucherShop: string; // voucher shop (VND)
+  voucherPlatform: string; // voucher sàn (VND)
+  shipFee: string;     // phí ship (VND)
+  cashback: string;    // hoàn xu (VND)
+};
+
+function emptyRow(id: string): SoiSaleRow {
+  return { id, name: "", price: "", origPrice: "", lowest30: "", voucherShop: "", voucherPlatform: "", shipFee: "", cashback: "" };
+}
+
+type SoiSaleHistory = { id: string; name: string; price: number; finalPrice: number; time: number };
+
+function TabSoiSale() {
+  const [mode, setMode] = useState<"single" | "compare">("single");
+  const [row1, setRow1] = useState<SoiSaleRow>(() => emptyRow("r1"));
+  const [row2, setRow2] = useState<SoiSaleRow>(() => emptyRow("r2"));
+  const [hist, setHist] = useState<SoiSaleHistory[]>([]);
+  const [shareOpen, setShareOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("soi-sale-hist");
+      if (raw) setHist(JSON.parse(raw));
+    } catch {}
+  }, []);
+
+  function saveToHist(r: SoiSaleRow, finalPrice: number) {
+    if (!r.name.trim() || !r.price) return;
+    const item: SoiSaleHistory = { id: Math.random().toString(36).slice(2), name: r.name.trim(), price: parseFloat(r.price), finalPrice, time: Date.now() };
+    const next = [item, ...hist].slice(0, 30);
+    setHist(next);
+    try { localStorage.setItem("soi-sale-hist", JSON.stringify(next)); } catch {}
+  }
+
+  function clearHist() {
+    setHist([]);
+    try { localStorage.removeItem("soi-sale-hist"); } catch {}
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+        🛒 Soi sale chống fake giá. Nhập tay từ Shopee/Lazada/Tiki → tính giá cuối thật, phát hiện chiêu nâng giá gốc rồi giảm 50%.
+      </p>
+
+      {/* Mode switcher */}
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          onClick={() => setMode("single")}
+          className={`rounded-xl py-2.5 text-sm font-semibold transition-all active:scale-95 ${mode === "single" ? "tab-active" : ""}`}
+          style={mode === "single" ? {} : { background: "var(--card)", color: "var(--text-muted)", border: "1px solid var(--border)" }}
+        >
+          1 sản phẩm
+        </button>
+        <button
+          onClick={() => setMode("compare")}
+          className={`rounded-xl py-2.5 text-sm font-semibold transition-all active:scale-95 ${mode === "compare" ? "tab-active" : ""}`}
+          style={mode === "compare" ? {} : { background: "var(--card)", color: "var(--text-muted)", border: "1px solid var(--border)" }}
+        >
+          ⚡ So sánh 2 sàn
+        </button>
+      </div>
+
+      <SoiSaleForm row={row1} setRow={setRow1} label={mode === "compare" ? "🛍 Sàn A" : ""} onSave={(fp) => saveToHist(row1, fp)} />
+      {mode === "compare" && (
+        <SoiSaleForm row={row2} setRow={setRow2} label="🛒 Sàn B" onSave={(fp) => saveToHist(row2, fp)} />
+      )}
+
+      {mode === "compare" && row1.price && row2.price && <SoiSaleCompareResult r1={row1} r2={row2} />}
+
+      <button
+        onClick={() => setShareOpen(true)}
+        className="mt-2 w-full rounded-xl py-3 text-sm font-semibold transition-all active:scale-95"
+        style={{ background: "var(--bg)", color: "var(--text)", border: "1px solid var(--border)" }}
+        disabled={!row1.price}
+      >
+        📤 Share kết quả
+      </button>
+
+      {/* History */}
+      <div className="rounded-2xl border p-4" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="font-semibold text-sm">📌 Sản phẩm đã soi ({hist.length})</p>
+          {hist.length > 0 && <button onClick={clearHist} className="text-xs text-red-400 hover:text-red-500">Xóa tất cả</button>}
+        </div>
+        {hist.length === 0 ? (
+          <p className="text-sm text-center py-4" style={{ color: "var(--text-muted)" }}>Chưa có. Bấm "💾 Lưu" để track giá theo thời gian.</p>
+        ) : (
+          <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
+            {hist.map(h => (
+              <div key={h.id} className="flex items-center justify-between gap-2 rounded-xl px-3 py-2" style={{ background: "var(--bg)" }}>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold truncate">{h.name}</p>
+                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                    Giá niêm: {formatNum(h.price)}đ → Trả thực: <strong style={{ color: "#22c55e" }}>{formatNum(h.finalPrice)}đ</strong>
+                  </p>
+                </div>
+                <span className="text-xs shrink-0" style={{ color: "var(--text-muted)" }}>
+                  {new Date(h.time).toLocaleDateString("vi-VN")}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <ShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        url={`https://phantram.online/soi-sale`}
+        title={`Soi sale ${row1.name || "Shopee/Lazada"}`}
+        text={(() => {
+          const calc = analyzeSale(row1);
+          if (!calc) return "🛒 Soi sale chống fake giá tại phantram.online/soi-sale";
+          return `🛒 ${row1.name || "Sản phẩm"}: trả thực ${formatNum(calc.finalPrice)}đ — giảm ${calc.realDiscount.toFixed(1)}% so giá gạch chéo. ${calc.verdict.label}`;
+        })()}
+        ogImageUrl={`https://phantram.online/soi-sale/opengraph-image?p=${encodeURIComponent(row1.price || "")}&o=${encodeURIComponent(row1.origPrice || "")}`}
+      />
+    </div>
+  );
+}
+
+// — single row form + result —
+
+function analyzeSale(r: SoiSaleRow) {
+  const price = parseFloat(r.price);
+  if (!price || isNaN(price)) return null;
+  const orig = parseFloat(r.origPrice) || price;
+  const lowest = parseFloat(r.lowest30) || 0;
+  const vShop = parseFloat(r.voucherShop) || 0;
+  const vPlat = parseFloat(r.voucherPlatform) || 0;
+  const ship = parseFloat(r.shipFee) || 0;
+  const cashback = parseFloat(r.cashback) || 0;
+
+  const finalPrice = Math.max(0, price - vShop - vPlat + ship - cashback);
+  const realDiscount = orig > 0 ? ((orig - finalPrice) / orig) * 100 : 0;
+  const claimedDiscount = orig > 0 ? ((orig - price) / orig) * 100 : 0;
+  const vsLowest = lowest > 0 ? ((finalPrice - lowest) / lowest) * 100 : 0;
+
+  // Verdict
+  let verdict: { label: string; tone: "good" | "warn" | "bad"; reason: string };
+  const warnings: string[] = [];
+
+  // FAKE SALE: giá gốc cao bất thường (>3x giá hiện tại)
+  if (orig > 0 && orig > price * 3) {
+    warnings.push(`🚨 Giá gốc ${formatNum(orig)}đ gấp ${(orig / price).toFixed(1)}× giá hiện tại — nhiều khả năng SHOP NÂNG GIÁ ẢO`);
+  }
+  // Claimed discount quá cao
+  if (claimedDiscount > 70) {
+    warnings.push(`⚠️ Sàn claim giảm ${claimedDiscount.toFixed(0)}% — chiêu marketing phổ biến, đối chiếu giá thị trường`);
+  }
+  // Đang đắt hơn giá thấp nhất 30 ngày
+  if (lowest > 0 && finalPrice > lowest * 1.05) {
+    warnings.push(`⏳ Giá trả thực ${formatNum(finalPrice)}đ cao hơn giá thấp nhất 30 ngày (${formatNum(lowest)}đ) tới ${vsLowest.toFixed(1)}% — nên CHỜ`);
+  }
+  // Đang RẺ hơn giá thấp nhất 30 ngày → tốt
+  if (lowest > 0 && finalPrice <= lowest * 1.02) {
+    // ok
+  }
+
+  if (warnings.length === 0) {
+    if (lowest > 0 && finalPrice <= lowest * 1.02) {
+      verdict = { label: "✅ MUA NGAY", tone: "good", reason: "Giá trả thực bằng hoặc thấp hơn giá thấp nhất 30 ngày — deal tốt" };
+    } else if (realDiscount >= 15) {
+      verdict = { label: "✅ OK MUA", tone: "good", reason: "Mức giảm thực ≥15% — chấp nhận được" };
+    } else {
+      verdict = { label: "🤔 BÌNH THƯỜNG", tone: "warn", reason: "Không có dấu hiệu fake, nhưng cũng không deal — tùy nhu cầu" };
+    }
+  } else if (warnings.length === 1 && warnings[0].startsWith("⏳")) {
+    verdict = { label: "⏳ NÊN CHỜ", tone: "warn", reason: warnings[0] };
+  } else {
+    verdict = { label: "🚨 NGHI NGỜ FAKE SALE", tone: "bad", reason: warnings.join(" — ") };
+  }
+
+  return { price, orig, lowest, finalPrice, realDiscount, claimedDiscount, vsLowest, verdict, warnings, vShop, vPlat, ship, cashback };
+}
+
+function SoiSaleForm({ row, setRow, label, onSave }: { row: SoiSaleRow; setRow: (r: SoiSaleRow) => void; label?: string; onSave: (fp: number) => void }) {
+  const update = (k: keyof SoiSaleRow, v: string) => setRow({ ...row, [k]: v });
+  const result = analyzeSale(row);
+
+  return (
+    <div className="rounded-2xl border p-4 flex flex-col gap-3" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+      {label && <p className="font-bold text-base">{label}</p>}
+
+      <input
+        type="text"
+        value={row.name}
+        onChange={e => update("name", e.target.value)}
+        placeholder="Tên sản phẩm (VD: iPhone 15 Pro Max)"
+        className="w-full rounded-xl border px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-400"
+        style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+      />
+
+      <div className="grid grid-cols-2 gap-3">
+        <NumInput label="Giá hiện tại (đ)" value={row.price} onChange={v => update("price", v)} placeholder="VD: 1.000.000" />
+        <NumInput label="Giá gạch chéo (đ)" value={row.origPrice} onChange={v => update("origPrice", v)} placeholder="VD: 2.000.000" />
+      </div>
+
+      <NumInput label="Giá thấp nhất 30 ngày (đ) — optional, chống fake sale" value={row.lowest30} onChange={v => update("lowest30", v)} placeholder="Bạn nhớ hoặc dùng ext theo dõi" />
+
+      <details className="rounded-xl border" style={{ background: "var(--bg)", borderColor: "var(--border)" }}>
+        <summary className="px-4 py-3 cursor-pointer text-sm font-semibold">🎫 Voucher / Phí ship / Hoàn xu (mở rộng)</summary>
+        <div className="px-4 pb-4 flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            <NumInput label="Voucher Shop (đ)" value={row.voucherShop} onChange={v => update("voucherShop", v)} placeholder="0" />
+            <NumInput label="Voucher Sàn (đ)" value={row.voucherPlatform} onChange={v => update("voucherPlatform", v)} placeholder="0" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <NumInput label="Phí ship (đ)" value={row.shipFee} onChange={v => update("shipFee", v)} placeholder="0" />
+            <NumInput label="Hoàn xu / Cashback (đ)" value={row.cashback} onChange={v => update("cashback", v)} placeholder="0" />
+          </div>
+        </div>
+      </details>
+
+      {result && <SoiSaleResultCard result={result} />}
+
+      {result && row.name.trim() && (
+        <button
+          onClick={() => onSave(result.finalPrice)}
+          className="w-full rounded-xl py-2.5 text-sm font-semibold transition-all active:scale-95"
+          style={{ background: "var(--primary)", color: "#fff" }}
+        >
+          💾 Lưu để track giá theo thời gian
+        </button>
+      )}
+    </div>
+  );
+}
+
+function SoiSaleResultCard({ result }: { result: NonNullable<ReturnType<typeof analyzeSale>> }) {
+  const toneBg = result.verdict.tone === "good" ? "#dcfce7" : result.verdict.tone === "bad" ? "#fee2e2" : "#fef9c3";
+  const toneText = result.verdict.tone === "good" ? "#15803d" : result.verdict.tone === "bad" ? "#b91c1c" : "#a16207";
+
+  return (
+    <div className="flex flex-col gap-3 slide-in">
+      {/* Verdict big */}
+      <div className="rounded-2xl p-4 text-center" style={{ background: toneBg }}>
+        <p className="text-2xl font-black" style={{ color: toneText }}>{result.verdict.label}</p>
+        <p className="text-xs mt-1" style={{ color: toneText, opacity: 0.85 }}>{result.verdict.reason}</p>
+      </div>
+
+      {/* Numbers */}
+      <div className="rounded-2xl p-4" style={{ background: "var(--result-bg)" }}>
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-sm" style={{ color: "var(--text-muted)" }}>💰 GIÁ TRẢ THỰC SỰ</span>
+          <span className="text-3xl font-black" style={{ color: "var(--result-text)" }}>{formatNum(result.finalPrice)}đ</span>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs" style={{ color: "var(--text-muted)" }}>
+          <span>Niêm yết: {formatNum(result.price)}đ</span>
+          {result.orig > result.price && <span>Gạch chéo: <s>{formatNum(result.orig)}đ</s></span>}
+          {result.vShop > 0 && <span>−Voucher shop: {formatNum(result.vShop)}đ</span>}
+          {result.vPlat > 0 && <span>−Voucher sàn: {formatNum(result.vPlat)}đ</span>}
+          {result.ship > 0 && <span>+Ship: {formatNum(result.ship)}đ</span>}
+          {result.cashback > 0 && <span>−Hoàn xu: {formatNum(result.cashback)}đ</span>}
+        </div>
+      </div>
+
+      {/* Discount stats */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-xl p-3" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+          <p className="text-xs" style={{ color: "var(--text-muted)" }}>Giảm THỰC</p>
+          <p className="text-xl font-bold" style={{ color: result.realDiscount > 0 ? "#22c55e" : "#ef4444" }}>
+            {result.realDiscount > 0 ? "−" : ""}{Math.abs(result.realDiscount).toFixed(1)}%
+          </p>
+          <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>so giá gạch chéo</p>
+        </div>
+        {result.lowest > 0 && (
+          <div className="rounded-xl p-3" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+            <p className="text-xs" style={{ color: "var(--text-muted)" }}>So 30 ngày</p>
+            <p className="text-xl font-bold" style={{ color: result.vsLowest <= 0 ? "#22c55e" : "#ef4444" }}>
+              {result.vsLowest > 0 ? "+" : ""}{result.vsLowest.toFixed(1)}%
+            </p>
+            <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>vs giá thấp nhất 30d</p>
+          </div>
+        )}
+      </div>
+
+      {/* Warnings list */}
+      {result.warnings.length > 0 && (
+        <div className="rounded-xl p-3" style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}>
+          <p className="text-xs font-bold mb-2" style={{ color: "#9a3412" }}>⚠️ Cảnh báo</p>
+          <ul className="text-xs space-y-1" style={{ color: "#9a3412" }}>
+            {result.warnings.map((w, i) => <li key={i}>• {w}</li>)}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SoiSaleCompareResult({ r1, r2 }: { r1: SoiSaleRow; r2: SoiSaleRow }) {
+  const a = analyzeSale(r1);
+  const b = analyzeSale(r2);
+  if (!a || !b) return null;
+  const diff = a.finalPrice - b.finalPrice;
+  const cheaper = diff < 0 ? "A" : diff > 0 ? "B" : "=";
+  const savePct = Math.abs(diff) / Math.max(a.finalPrice, b.finalPrice) * 100;
+
+  return (
+    <div className="rounded-2xl p-4 slide-in" style={{ background: "var(--result-bg)" }}>
+      <p className="text-sm font-semibold mb-2" style={{ color: "var(--text-muted)" }}>⚡ KẾT QUẢ SO SÁNH</p>
+      {cheaper === "=" ? (
+        <p className="text-xl font-bold text-center">Bằng giá nhau</p>
+      ) : (
+        <div className="text-center">
+          <p className="text-2xl font-black" style={{ color: "var(--result-text)" }}>
+            Sàn {cheaper} rẻ hơn {formatNum(Math.abs(diff))}đ
+          </p>
+          <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
+            Tiết kiệm {savePct.toFixed(1)}% so với sàn {cheaper === "A" ? "B" : "A"}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // TAB_COMPONENTS map kept for non-shareable tabs.
 // Shareable tabs (discount, compound, salary-tax, breakeven, weight-bmi) accept an optional `initial` prop.
 const TAB_COMPONENTS: Record<TabId, React.FC> = {
@@ -2545,6 +2874,7 @@ const TAB_COMPONENTS: Record<TabId, React.FC> = {
   "recipe-scale": TabRecipeScale,
   "weight-bmi": TabWeightBMI as unknown as React.FC,
   "time-progress": TabTimeProgress as unknown as React.FC,
+  "soi-sale": TabSoiSale,
 };
 
 // ────────── Shared UI pieces ──────────
