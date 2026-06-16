@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Calculator, { TAB_URL_MAP, TABS, type TabId } from "@/components/Calculator";
+import Calculator from "@/components/Calculator";
+import { TAB_URL_MAP, TABS, type TabId } from "@/lib/tabs";
 
 // Slug (URL path used by tool pages) → TabId
 const SLUG_TO_TAB: Record<string, TabId> = {
