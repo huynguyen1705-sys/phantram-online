@@ -25,6 +25,15 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(`${BLOG_DOMAIN}${pathname}`, 301);
   }
 
+  // Embed routes: allow cross-origin iframe + cache
+  if (pathname.startsWith("/embed/")) {
+    const res = NextResponse.next();
+    res.headers.set("Content-Security-Policy", "frame-ancestors *;");
+    res.headers.set("X-Frame-Options", "ALLOWALL");
+    res.headers.set("Cache-Control", "public, max-age=3600, s-maxage=3600");
+    return res;
+  }
+
   // Forward URL info to OG image routes via headers
   // (opengraph-image.tsx file convention doesn't receive searchParams natively)
   if (pathname.endsWith("/opengraph-image")) {
@@ -41,6 +50,7 @@ export const config = {
   matcher: [
     "/blog",
     "/blog/:path*",
+    "/embed/:path*",
     "/wp-admin/:path*",
     "/wp-login.php",
     "/wp-json/:path*",

@@ -2894,11 +2894,16 @@ function TabButton({ tab, isActive, onClick, fullWidth = false }: { tab: { id: T
 function HistoryPanel({ history, setHistory, compact = false }: { history: HistoryItem[]; setHistory: (h: HistoryItem[]) => void; compact?: boolean }) {
   return (
     <div className={`rounded-2xl border p-4 ${compact ? "" : "slide-in"}`} style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-3 gap-2">
         <p className="font-semibold text-sm">🕐 Lịch sử ({history.length})</p>
-        {history.length > 0 && (
-          <button onClick={() => { setHistory([]); localStorage.setItem("calc-history", "[]"); }} className="text-xs text-red-400 hover:text-red-500">Xóa tất cả</button>
-        )}
+        <div className="flex items-center gap-3">
+          {history.length >= 2 && (
+            <a href="/so-sanh-tinh-toan" className="text-xs hover:underline" style={{ color: "var(--text)" }}>🔍 So sánh nhiều</a>
+          )}
+          {history.length > 0 && (
+            <button onClick={() => { setHistory([]); localStorage.setItem("calc-history", "[]"); }} className="text-xs text-red-400 hover:text-red-500">Xóa tất cả</button>
+          )}
+        </div>
       </div>
       {history.length === 0 ? (
         <p className="text-sm text-center py-4" style={{ color: "var(--text-muted)" }}>Chưa có lịch sử</p>
@@ -2993,6 +2998,8 @@ interface CalculatorProps {
   initialTab?: TabId;
   singleTab?: boolean;
   breadcrumb?: ReactNode;
+  embed?: boolean;
+  embedTheme?: "auto" | "light" | "dark";
 }
 
 export default function Calculator(props: CalculatorProps = {}) {
@@ -3003,7 +3010,7 @@ export default function Calculator(props: CalculatorProps = {}) {
   );
 }
 
-function CalculatorInner({ initialTab, singleTab = false, breadcrumb }: CalculatorProps) {
+function CalculatorInner({ initialTab, singleTab = false, breadcrumb, embed = false, embedTheme }: CalculatorProps) {
   const [activeTab, setActiveTab] = useState<TabId>(initialTab ?? "percent-of");
   const [dark, setDark] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -3027,13 +3034,59 @@ function CalculatorInner({ initialTab, singleTab = false, breadcrumb }: Calculat
   }, [initialTab, searchParams]);
 
   useEffect(() => {
+    if (embed) {
+      // In embed mode, theme comes from query param (?theme=light|dark|auto)
+      let useDark = false;
+      if (embedTheme === "dark") useDark = true;
+      else if (embedTheme === "light") useDark = false;
+      else {
+        // auto: follow host system preference
+        useDark = typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      }
+      setDark(useDark);
+      document.documentElement.classList.toggle("dark", useDark);
+      // Transparent body so iframe blends with host page
+      document.body.style.background = "transparent";
+      document.documentElement.style.background = "transparent";
+      return;
+    }
     const saved = localStorage.getItem("theme");
     if (saved === "dark") { setDark(true); document.documentElement.classList.add("dark"); }
     try {
       const h = JSON.parse(localStorage.getItem("calc-history") || "[]");
       setHistory(h);
     } catch {}
-  }, []);
+  }, [embed, embedTheme]);
+
+  // Embed mode: postMessage height to parent so it can auto-resize iframe
+  useEffect(() => {
+    if (!embed || typeof window === "undefined" || window.parent === window) return;
+    const post = () => {
+      const h = Math.max(
+        document.documentElement.scrollHeight,
+        document.body.scrollHeight,
+      );
+      try {
+        window.parent.postMessage(
+          { type: "phantram-embed", slug: initialTab ?? "", height: h },
+          "*",
+        );
+      } catch {}
+    };
+    post();
+    const ro = new ResizeObserver(() => post());
+    ro.observe(document.documentElement);
+    const mo = new MutationObserver(() => post());
+    mo.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true });
+    window.addEventListener("load", post);
+    const t = setInterval(post, 1500);
+    return () => {
+      ro.disconnect();
+      mo.disconnect();
+      window.removeEventListener("load", post);
+      clearInterval(t);
+    };
+  }, [embed, initialTab, activeTab]);
 
   const toggleDark = () => {
     setDark(d => {
@@ -3054,6 +3107,32 @@ function CalculatorInner({ initialTab, singleTab = false, breadcrumb }: Calculat
     }
     return <ActiveTab key={activeTab} />;
   };
+
+  // ═══ EMBED MODE — minimal layout for iframe ═══
+  if (embed) {
+    const toolPath = initialTab ? TAB_URL_MAP[initialTab] : "/";
+    return (
+      <div style={{ background: "transparent", minHeight: "auto", padding: "8px" }}>
+        <div
+          className="rounded-2xl p-4 shadow-sm border"
+          style={{ background: "var(--card)", borderColor: "var(--border)" }}
+        >
+          {renderActiveTab()}
+        </div>
+        <div className="mt-2 text-center text-xs" style={{ color: "var(--text-muted)" }}>
+          Powered by{" "}
+          <a
+            href={`https://phantram.online${toolPath}`}
+            target="_blank"
+            rel="noopener"
+            style={{ color: "var(--primary)", fontWeight: 600 }}
+          >
+            phantram.online
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
@@ -3193,6 +3272,95 @@ function CalculatorInner({ initialTab, singleTab = false, breadcrumb }: Calculat
           </aside>
         </div>
       </div>
+
+      {!singleTab && (
+        <section className="max-w-7xl mx-auto px-4 lg:px-6 pt-8 pb-2 grid gap-4 md:grid-cols-2">
+          <Link
+            href="/ai"
+            className="block rounded-2xl border p-5 lg:p-6 transition-all hover:opacity-90 hover:scale-[1.01] active:scale-[0.99]"
+            style={{
+              background: "linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)",
+              borderColor: "transparent",
+              color: "#fff",
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <span className="text-4xl lg:text-5xl shrink-0">🤖</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold uppercase tracking-wide opacity-80 mb-1">Mới ✨</p>
+                <p className="text-lg lg:text-xl font-bold">AI Parser — Hỏi % bằng tiếng Việt</p>
+                <p className="text-sm mt-1 opacity-90">
+                  VD: &quot;Lương 25 triệu trừ 10% bảo hiểm còn bao nhiêu?&quot; — AI tự hiểu &amp; tự tính.
+                </p>
+              </div>
+              <span className="text-2xl shrink-0 hidden sm:inline">→</span>
+            </div>
+          </Link>
+          <Link
+            href="/widget-embed"
+            className="block rounded-2xl border p-5 lg:p-6 transition-all hover:opacity-90 hover:scale-[1.01] active:scale-[0.99]"
+            style={{
+              background: "linear-gradient(135deg, #059669 0%, #0891b2 100%)",
+              borderColor: "transparent",
+              color: "#fff",
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <span className="text-4xl lg:text-5xl shrink-0">🧩</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold uppercase tracking-wide opacity-80 mb-1">Dành cho website chủ</p>
+                <p className="text-lg lg:text-xl font-bold">Nhúng widget vào website của bạn miễn phí</p>
+                <p className="text-sm mt-1 opacity-90">
+                  Copy 1 đoạn code — dán vào blog, WordPress, Wix… có ngay máy tính phần trăm.
+                </p>
+              </div>
+              <span className="text-2xl shrink-0 hidden sm:inline">→</span>
+            </div>
+          </Link>
+          <Link
+            href="/so-sanh-tiet-kiem"
+            className="block rounded-2xl border p-5 lg:p-6 transition-all hover:opacity-90 hover:scale-[1.01] active:scale-[0.99]"
+            style={{
+              background: "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)",
+              borderColor: "transparent",
+              color: "#fff",
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <span className="text-4xl lg:text-5xl shrink-0">💰</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold uppercase tracking-wide opacity-80 mb-1">Cập nhật T6/2026</p>
+                <p className="text-lg lg:text-xl font-bold">So sánh lãi tiết kiệm 26 ngân hàng</p>
+                <p className="text-sm mt-1 opacity-90">
+                  MBV, VCBNeo, PGBank, VIB 7%/năm. Big4 6.8%. Cập nhật mỗi tuần.
+                </p>
+              </div>
+              <span className="text-2xl shrink-0 hidden sm:inline">→</span>
+            </div>
+          </Link>
+          <Link
+            href="/so-sanh-vay"
+            className="block rounded-2xl border p-5 lg:p-6 transition-all hover:opacity-90 hover:scale-[1.01] active:scale-[0.99]"
+            style={{
+              background: "linear-gradient(135deg, #6366f1 0%, #ec4899 100%)",
+              borderColor: "transparent",
+              color: "#fff",
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <span className="text-4xl lg:text-5xl shrink-0">🏠</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold uppercase tracking-wide opacity-80 mb-1">Big4 vs TMCP</p>
+                <p className="text-lg lg:text-xl font-bold">So sánh lãi vay mua nhà — tránh bẫy lãi mồi</p>
+                <p className="text-sm mt-1 opacity-90">
+                  Big4 8-10.5% · TMCP 9-10.75% · Cảnh báo PVcomBank 3.99% &amp; HSBC 5.5% lãi mồi.
+                </p>
+              </div>
+              <span className="text-2xl shrink-0 hidden sm:inline">→</span>
+            </div>
+          </Link>
+        </section>
+      )}
 
       {!singleTab && (
         <section className="max-w-7xl mx-auto px-4 lg:px-6 py-8">
