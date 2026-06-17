@@ -1,6 +1,7 @@
 export default function IntroSEO() {
   return (
     <div style={{ background: "var(--bg)" }} className="px-4 py-6">
+      <div className="max-w-5xl mx-auto">
       <article
         className="rounded-2xl border p-5 prose-content"
         style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }}
@@ -136,6 +137,7 @@ export default function IntroSEO() {
           chuẩn quốc tế.
         </p>
       </article>
+      </div>
     </div>
   );
 }

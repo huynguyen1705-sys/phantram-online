@@ -89,6 +89,7 @@ export default function BlogSection() {
 
   return (
     <div style={{ background: "var(--bg)" }} className="pb-10">
+      <div className="max-w-5xl mx-auto">
       {/* Cluster sections */}
       <div className="px-4 pt-6">
         <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text)" }}>
@@ -207,6 +208,7 @@ export default function BlogSection() {
             📝 Xem tất cả bài viết
           </a>
         </div>
+      </div>
       </div>
     </div>
   );
