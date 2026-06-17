@@ -31,7 +31,7 @@ export default function HomeSEOContent() {
   }));
 
   return (
-    <article className="seo-content max-w-4xl mx-auto px-4 py-8" aria-label="Nội dung giới thiệu phantram.online">
+    <article className="seo-content max-w-5xl mx-auto px-4 py-8" aria-label="Nội dung giới thiệu phantram.online">
       <h1>Máy Tính Phần Trăm Online — Nhanh, Miễn Phí, Tối Ưu Mobile</h1>
       <p>
         <strong>phantram.online</strong> là bộ <strong>17 công cụ tính phần trăm chuyên biệt</strong> dành riêng cho

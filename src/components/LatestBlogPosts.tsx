@@ -54,7 +54,7 @@ export default async function LatestBlogPosts() {
 
   return (
     <section
-      className="latest-blog-posts max-w-4xl mx-auto px-4 py-8"
+      className="latest-blog-posts max-w-5xl mx-auto px-4 py-8"
       aria-label="Bài viết mới nhất từ blog phantram.online"
     >
       <h2 id="bai-viet-moi">📰 Bài Viết Mới Nhất Từ Blog</h2>
