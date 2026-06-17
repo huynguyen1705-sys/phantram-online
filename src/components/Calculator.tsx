@@ -2897,14 +2897,41 @@ function InfoCardsGrid() {
   );
 }
 
+const QUICK_TIPS = [
+  { icon: "⚡", title: "Mẹo tính 10% nhanh", body: "Chuyển dấu phẩy lùi 1 bước sang trái. Ví dụ: 10% của 850.000đ = 85.000đ." },
+  { icon: "🎯", title: "Quy tắc 1% × 5", body: "Để tính 5% nhanh: tính 1% (chia 100) rồi nhân 5. Áp dụng cho mọi % cổ điển." },
+  { icon: "🔄", title: "Đảo ngược % dễ nhối", body: "X% của Y = Y% của X. Ví dụ 8% của 50 = 50% của 8 = 4. Tiết kiệm thời gian!" },
+];
+
+function QuickTips() {
+  return (
+    <div className="rounded-2xl p-4 border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+      <p className="text-xs font-bold uppercase mb-3 tracking-wide" style={{ color: "var(--text-muted)" }}>
+        💡 Mẹo tính phần trăm nhanh
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {QUICK_TIPS.map(t => (
+          <div key={t.title} className="rounded-xl p-3" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <p className="text-xl mb-1">{t.icon}</p>
+            <p className="text-sm font-semibold mb-1" style={{ color: "var(--text)" }}>{t.title}</p>
+            <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>{t.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function RelatedTools({ currentTab }: { currentTab: TabId }) {
   const group = TAB_GROUPS.find(g => g.tabs.includes(currentTab));
   const related = (group?.tabs ?? []).filter(id => id !== currentTab).slice(0, 4);
+  if (related.length === 0) return null;
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-xs font-bold uppercase mb-1 px-2 tracking-wide" style={{ color: "var(--text-muted)" }}>
+    <div className="rounded-2xl p-4 border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+      <p className="text-xs font-bold uppercase mb-3 tracking-wide" style={{ color: "var(--text-muted)" }}>
         🔗 Công cụ liên quan
       </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
       {related.map(tabId => {
         const tab = TABS.find(t => t.id === tabId);
         if (!tab) return null;
@@ -2913,20 +2940,14 @@ function RelatedTools({ currentTab }: { currentTab: TabId }) {
             key={tabId}
             href={TAB_URL_MAP[tabId]}
             className="block rounded-xl px-3 py-2 text-sm transition-all hover:opacity-80"
-            style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)" }}
+            style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)" }}
           >
             <p className="font-semibold">{tab.icon} {tab.label}</p>
             <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{TAB_DESCRIPTIONS[tabId]}</p>
           </Link>
         );
       })}
-      <Link
-        href="/"
-        className="block rounded-xl px-3 py-2 text-sm font-semibold text-center mt-1 transition-all hover:opacity-80"
-        style={{ background: "var(--primary)", color: "#fff" }}
-      >
-        ← Xem tất cả công cụ
-      </Link>
+      </div>
     </div>
   );
 }
@@ -3195,10 +3216,13 @@ function CalculatorInner({ initialTab, singleTab = false, breadcrumb, embed = fa
           </aside>
 
           {/* Main calculator */}
-          <section className="col-span-6">
+          <section className="col-span-6 flex flex-col gap-4">
             <div className="rounded-2xl p-6 shadow-sm border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
               {renderActiveTab()}
             </div>
+            <RelatedTools currentTab={activeTab} />
+            <QuickTips />
+            <InfoCardsGrid />
           </section>
 
           {/* Sidekick phải: lịch sử + basic calc + info */}
