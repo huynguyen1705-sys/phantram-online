@@ -138,36 +138,11 @@ export default function HomeSEOContent() {
 
       <h2 id="blog">Tích Hợp Blog phantram.online</h2>
       <p>
-        Bên cạnh công cụ tính toán, blog <strong>blog.phantram.online</strong> có hơn <strong>31 bài kiến thức</strong>{" "}
-        về tài chính cá nhân, lãi suất, đầu tư và công thức %. Một vài bài đọc nhiều:
+        Bên cạnh bộ công cụ tính toán, blog <a href="https://blog.phantram.online/" rel="noopener"><strong>blog.phantram.online</strong></a>{" "}
+        có hơn <strong>30 bài kiến thức</strong> về tài chính cá nhân, lãi suất ngân hàng, công thức %, đầu tư và
+        case-study thực tế — được xuất bản và cập nhật hằng tuần. Danh sách bài viết mới nhất hiển thị ngay phía
+        dưới (tự động đồng bộ từ blog).
       </p>
-      <ul>
-        <li>
-          <a href="https://blog.phantram.online/blog/lai-kep-la-gi/" target="_blank" rel="noopener">
-            Lãi kép là gì — sức mạnh thần kỳ thứ 8 của thế giới
-          </a>
-        </li>
-        <li>
-          <a href="https://blog.phantram.online/blog/quy-tac-72/" target="_blank" rel="noopener">
-            Quy tắc 72 — ước tính nhanh thời gian gấp đôi tiền
-          </a>
-        </li>
-        <li>
-          <a href="https://blog.phantram.online/blog/roi-la-gi-cach-tinh/" target="_blank" rel="noopener">
-            ROI là gì và cách tính tỷ suất sinh lời
-          </a>
-        </li>
-        <li>
-          <a href="https://blog.phantram.online/blog/cagr-la-gi/" target="_blank" rel="noopener">
-            CAGR — tỷ lệ tăng trưởng kép hằng năm
-          </a>
-        </li>
-        <li>
-          <a href="https://blog.phantram.online/blog/phan-tram-trong-tai-chinh/" target="_blank" rel="noopener">
-            Vai trò của phần trăm trong tài chính cá nhân
-          </a>
-        </li>
-      </ul>
 
       <h2 id="faq">Câu Hỏi Thường Gặp</h2>
       <details>
