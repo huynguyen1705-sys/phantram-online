@@ -2,6 +2,7 @@ import Calculator from "@/components/Calculator";
 import HomeFeatureBanners from "@/components/HomeFeatureBanners";
 import HomeSEOContent from "@/components/HomeSEOContent";
 import LatestBlogPosts from "@/components/LatestBlogPosts";
+import BlogIndexFull from "@/components/BlogIndexFull";
 
 const SITE_URL = "https://phantram.online";
 
@@ -74,6 +75,7 @@ export default function Home() {
       <HomeFeatureBanners />
       <HomeSEOContent />
       <LatestBlogPosts />
+      <BlogIndexFull />
     </>
   );
 }
