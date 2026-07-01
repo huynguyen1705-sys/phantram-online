@@ -115,7 +115,15 @@ export default async function BlogIndexFull() {
         })}
       </div>
 
-      <div className="mt-6 text-center">
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-center">
+        <a
+          href="https://blog.phantram.online/muc-luc/"
+          rel="noopener"
+          className="inline-flex items-center gap-1 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all active:scale-95"
+          style={{ background: "var(--primary)", color: "#fff" }}
+        >
+          📚 Mục lục toàn bộ bài viết
+        </a>
         <a
           href="https://blog.phantram.online/"
           rel="noopener"
