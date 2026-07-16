@@ -1,20 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BLOG_DOMAIN = "https://blog.phantram.online";
+const BLOG_BASE = "https://1phantram.com/blog";
 
 export function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
 
-  // Redirect /blog/* → blog.phantram.online/*
-  if (pathname === "/blog" || pathname === "/blog/") {
-    return NextResponse.redirect(`${BLOG_DOMAIN}/`, 301);
-  }
-  if (pathname.startsWith("/blog/")) {
-    const newPath = pathname.replace(/^\/blog/, "");
-    return NextResponse.redirect(`${BLOG_DOMAIN}${newPath}`, 301);
+  // /blog/* is served by Cloudflare Worker before Next.js. If a request reaches
+  // the app directly (preview/origin), let it fall through instead of redirecting
+  // back to the old subdomain.
+  if (pathname === "/blog" || pathname === "/blog/" || pathname.startsWith("/blog/")) {
+    return NextResponse.next();
   }
 
-  // Redirect /wp-* paths to blog subdomain
+  // WordPress assets/admin shortcuts on root domain should live under /blog/*.
   if (
     pathname.startsWith("/wp-admin") ||
     pathname.startsWith("/wp-login.php") ||
@@ -22,7 +20,7 @@ export function middleware(req: NextRequest) {
     pathname.startsWith("/wp-content/") ||
     pathname.startsWith("/wp-includes/")
   ) {
-    return NextResponse.redirect(`${BLOG_DOMAIN}${pathname}`, 301);
+    return NextResponse.redirect(`${BLOG_BASE}${pathname}${search || ""}`, 301);
   }
 
   // Embed routes: allow cross-origin iframe + cache
@@ -35,7 +33,6 @@ export function middleware(req: NextRequest) {
   }
 
   // Forward URL info to OG image routes via headers
-  // (opengraph-image.tsx file convention doesn't receive searchParams natively)
   if (pathname.endsWith("/opengraph-image")) {
     const requestHeaders = new Headers(req.headers);
     requestHeaders.set("x-pathname", pathname);

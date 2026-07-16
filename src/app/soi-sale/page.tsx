@@ -4,7 +4,7 @@ import Calculator from "@/components/Calculator";
 
 const URL_PATH = "/soi-sale";
 const NAME = "Soi sale Shopee/Lazada/Tiki — chống fake giá";
-const TITLE = "Soi Sale Shopee Lazada Tiki — Phát Hiện Fake Giá, Tính Giá Cuối Thật | phantram.online";
+const TITLE = "Soi Sale Shopee Lazada Tiki — Phát Hiện Fake Giá, Tính Giá Cuối Thật | 1phantram.com";
 const DESC =
   "Soi sale chống fake giá Shopee/Lazada/Tiki: tính giá cuối thật sau voucher + ship + hoàn xu, phát hiện chiêu nâng giá gốc giả rồi giảm 50%, so sánh 2 sàn cùng lúc, lưu lịch sử giá theo thời gian.";
 
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
     "so sánh giá shopee lazada",
     "chống lừa giảm giá",
   ],
-  alternates: { canonical: `https://phantram.online${URL_PATH}` },
-  openGraph: { title: TITLE, description: DESC, url: `https://phantram.online${URL_PATH}`, siteName: "phantram.online", locale: "vi_VN", type: "website" },
+  alternates: { canonical: `https://1phantram.com${URL_PATH}` },
+  openGraph: { title: TITLE, description: DESC, url: `https://1phantram.com${URL_PATH}`, siteName: "1phantram.com", locale: "vi_VN", type: "website" },
   twitter: { card: "summary_large_image", title: TITLE, description: DESC },
 };
 
@@ -41,7 +41,7 @@ const jsonLd = {
     {
       "@type": "WebApplication",
       name: NAME,
-      url: `https://phantram.online${URL_PATH}`,
+      url: `https://1phantram.com${URL_PATH}`,
       applicationCategory: "FinanceApplication",
       operatingSystem: "Any",
       offers: { "@type": "Offer", price: "0", priceCurrency: "VND" },
@@ -50,8 +50,8 @@ const jsonLd = {
     {
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Trang chủ", item: "https://phantram.online" },
-        { "@type": "ListItem", position: 2, name: NAME, item: `https://phantram.online${URL_PATH}` },
+        { "@type": "ListItem", position: 1, name: "Trang chủ", item: "https://1phantram.com" },
+        { "@type": "ListItem", position: 2, name: NAME, item: `https://1phantram.com${URL_PATH}` },
       ],
     },
     {

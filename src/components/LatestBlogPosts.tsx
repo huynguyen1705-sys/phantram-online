@@ -35,6 +35,10 @@ function decodeEntities(s: string): string {
     .replace(/&quot;/g, '"');
 }
 
+function blogPublicUrl(link: string): string {
+  return link.replace(/^https:\/\/blog\.phantram\.online/i, "https://1phantram.com/blog");
+}
+
 function formatDate(iso: string): string {
   try {
     const d = new Date(iso);
@@ -55,20 +59,20 @@ export default async function LatestBlogPosts() {
   return (
     <section
       className="latest-blog-posts max-w-5xl mx-auto px-4 py-8"
-      aria-label="Bài viết mới nhất từ blog phantram.online"
+      aria-label="Bài viết mới nhất từ blog 1phantram.com"
     >
       <h2 id="bai-viet-moi">📰 Bài Viết Mới Nhất Từ Blog</h2>
       <p>
         Bộ kiến thức tài chính cá nhân, công thức % và case-study thực tế cập nhật liên tục tại{" "}
-        <a href="https://blog.phantram.online/" rel="noopener">
-          blog.phantram.online
+        <a href="https://1phantram.com/blog/" rel="noopener">
+          1phantram.com/blog
         </a>
         :
       </p>
       <ul className="latest-posts-list">
         {posts.map((p) => (
           <li key={p.slug}>
-            <a href={p.link} rel="noopener">
+            <a href={blogPublicUrl(p.link)} rel="noopener">
               {decodeEntities(p.title.rendered)}
             </a>
             <span className="post-date"> — {formatDate(p.date)}</span>
@@ -77,8 +81,8 @@ export default async function LatestBlogPosts() {
       </ul>
       <p>
         Xem toàn bộ kho bài viết tại{" "}
-        <a href="https://blog.phantram.online/" rel="noopener">
-          blog phantram.online
+        <a href="https://1phantram.com/blog/" rel="noopener">
+          blog 1phantram.com
         </a>{" "}
         (hơn 30 bài, cập nhật liên tục).
       </p>

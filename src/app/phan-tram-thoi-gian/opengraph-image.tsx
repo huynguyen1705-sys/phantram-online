@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-export const alt = "Phần trăm thời gian đã qua — phantram.online";
+export const alt = "Phần trăm thời gian đã qua — 1phantram.com";
 export const contentType = "image/png";
 export const size = { width: 1200, height: 630 };
 
@@ -183,7 +183,7 @@ export default async function Image(_props: { searchParams?: SP } = {}) {
           <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(255,255,255,0.95)", padding: "10px 22px", borderRadius: 999, border: "2px solid rgba(255,255,255,0.8)" }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: theme.dark, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 900 }}>%</div>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <div style={{ fontSize: 20, fontWeight: 800, color: "#0f172a", display: "flex" }}>phantram.online</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: "#0f172a", display: "flex" }}>1phantram.com</div>
               <div style={{ fontSize: 12, color: "#64748b", marginTop: 2, display: "flex" }}>Tính phần trăm online</div>
             </div>
           </div>
@@ -229,7 +229,7 @@ export default async function Image(_props: { searchParams?: SP } = {}) {
         <div style={{ display: "flex", justifyContent: "center", marginTop: 14 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(15,23,42,0.85)", color: "white", padding: "12px 30px", borderRadius: 999, fontSize: 22, fontWeight: 700, boxShadow: "0 10px 30px rgba(0,0,0,0.25)" }}>
             <span style={{ display: "flex" }}>👆</span>
-            <span style={{ display: "flex" }}>Tính ngay tại phantram.online/phan-tram-thoi-gian</span>
+            <span style={{ display: "flex" }}>Tính ngay tại 1phantram.com/phan-tram-thoi-gian</span>
           </div>
         </div>
       </div>

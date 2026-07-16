@@ -4,7 +4,7 @@ import Calculator from "@/components/Calculator";
 
 const URL_PATH = "/phan-tram-thoi-gian";
 const NAME = "Phần trăm thời gian đã qua";
-const TITLE = "Năm 2026 Đã Qua Bao Nhiêu Phần Trăm? — Tính Live | phantram.online";
+const TITLE = "Năm 2026 Đã Qua Bao Nhiêu Phần Trăm? — Tính Live | 1phantram.com";
 const DESC =
   "Hôm nay là ngày bao nhiêu? Năm 2026 đã trôi qua bao nhiêu %? Tính live % đã qua của năm, tháng, ngày, deadline dự án. Cập nhật mỗi giây, share Facebook đẹp.";
 
@@ -20,8 +20,8 @@ export const metadata: Metadata = {
     "phần trăm thời gian",
     "hôm nay là ngày bao nhiêu",
   ],
-  alternates: { canonical: `https://phantram.online${URL_PATH}` },
-  openGraph: { title: TITLE, description: DESC, url: `https://phantram.online${URL_PATH}`, siteName: "phantram.online", locale: "vi_VN", type: "website" },
+  alternates: { canonical: `https://1phantram.com${URL_PATH}` },
+  openGraph: { title: TITLE, description: DESC, url: `https://1phantram.com${URL_PATH}`, siteName: "1phantram.com", locale: "vi_VN", type: "website" },
   twitter: { card: "summary_large_image", title: TITLE, description: DESC },
 };
 
@@ -36,8 +36,8 @@ const FAQ = [
 const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
-    { "@type": "WebApplication", name: NAME, url: `https://phantram.online${URL_PATH}`, applicationCategory: "UtilitiesApplication", operatingSystem: "Any", offers: { "@type": "Offer", price: "0", priceCurrency: "VND" }, aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", ratingCount: "812", bestRating: "5", worstRating: "1" } },
-    { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Trang chủ", item: "https://phantram.online" }, { "@type": "ListItem", position: 2, name: NAME, item: `https://phantram.online${URL_PATH}` }] },
+    { "@type": "WebApplication", name: NAME, url: `https://1phantram.com${URL_PATH}`, applicationCategory: "UtilitiesApplication", operatingSystem: "Any", offers: { "@type": "Offer", price: "0", priceCurrency: "VND" }, aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", ratingCount: "812", bestRating: "5", worstRating: "1" } },
+    { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Trang chủ", item: "https://1phantram.com" }, { "@type": "ListItem", position: 2, name: NAME, item: `https://1phantram.com${URL_PATH}` }] },
     { "@type": "FAQPage", mainEntity: FAQ.map(f => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) },
   ],
 };

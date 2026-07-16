@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/_next/"],
       },
     ],
-    sitemap: "https://phantram.online/sitemap.xml",
-    host: "https://phantram.online",
+    sitemap: "https://1phantram.com/sitemap.xml",
+    host: "https://1phantram.com",
   };
 }

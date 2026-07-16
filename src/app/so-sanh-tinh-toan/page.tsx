@@ -11,12 +11,12 @@ const DESC =
 export const metadata: Metadata = {
   title: TITLE,
   description: DESC,
-  alternates: { canonical: `https://phantram.online${URL_PATH}` },
+  alternates: { canonical: `https://1phantram.com${URL_PATH}` },
   openGraph: {
     title: TITLE,
     description: DESC,
-    url: `https://phantram.online${URL_PATH}`,
-    siteName: "phantram.online",
+    url: `https://1phantram.com${URL_PATH}`,
+    siteName: "1phantram.com",
     images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
     locale: "vi_VN",
     type: "website",
@@ -31,7 +31,7 @@ const FAQ = [
   },
   {
     q: "Lịch sử tính toán được lưu ở đâu?",
-    a: "Toàn bộ phép tính bạn thực hiện trên phantram.online được lưu cục bộ trong trình duyệt (localStorage, key “calc-history”). Không gửi lên server, không tài khoản — bạn dùng xong xóa lúc nào cũng được. Đổi máy/đổi trình duyệt thì lịch sử không theo qua.",
+    a: "Toàn bộ phép tính bạn thực hiện trên 1phantram.com được lưu cục bộ trong trình duyệt (localStorage, key “calc-history”). Không gửi lên server, không tài khoản — bạn dùng xong xóa lúc nào cũng được. Đổi máy/đổi trình duyệt thì lịch sử không theo qua.",
   },
   {
     q: "Tại sao tôi không thấy phép tính cũ trong danh sách?",
@@ -53,7 +53,7 @@ const jsonLd = {
     {
       "@type": "WebApplication",
       name: NAME,
-      url: `https://phantram.online${URL_PATH}`,
+      url: `https://1phantram.com${URL_PATH}`,
       applicationCategory: "UtilitiesApplication",
       operatingSystem: "Any",
       offers: { "@type": "Offer", price: "0", priceCurrency: "VND" },
@@ -68,8 +68,8 @@ const jsonLd = {
     {
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Trang chủ", item: "https://phantram.online" },
-        { "@type": "ListItem", position: 2, name: "So sánh tính toán", item: `https://phantram.online${URL_PATH}` },
+        { "@type": "ListItem", position: 1, name: "Trang chủ", item: "https://1phantram.com" },
+        { "@type": "ListItem", position: 2, name: "So sánh tính toán", item: `https://1phantram.com${URL_PATH}` },
       ],
     },
     {
@@ -92,7 +92,7 @@ export default function Page() {
       <header className="border-b sticky top-0 z-30" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
         <div className="max-w-7xl mx-auto px-4 lg:px-6 py-3 flex items-center justify-between">
           <Link href="/" className="font-bold text-lg" style={{ color: "var(--text)" }}>
-            phantram.online
+            1phantram.com
           </Link>
           <Link href="/" className="text-xs px-3 py-1.5 rounded-lg border" style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}>
             ← Trang chủ
@@ -153,7 +153,7 @@ export default function Page() {
       </main>
 
       <footer className="text-center py-4 text-xs" style={{ color: "var(--text-muted)" }}>
-        © 2026 phantram.online — Công cụ tính % miễn phí
+        © 2026 1phantram.com — Công cụ tính % miễn phí
       </footer>
     </>
   );

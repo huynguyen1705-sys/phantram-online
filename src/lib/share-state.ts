@@ -20,7 +20,7 @@ export const SHAREABLE_TAB_URL: Record<ShareableTabId, string> = {
   "time-progress": "/phan-tram-thoi-gian",
 };
 
-export const SITE_ORIGIN = "https://phantram.online";
+export const SITE_ORIGIN = "https://1phantram.com";
 
 // ───────── Shape per tab (subset of state that has meaning to share) ─────────
 

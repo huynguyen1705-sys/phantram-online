@@ -4,19 +4,19 @@ import AIParser from "@/components/AIParser";
 
 const URL_PATH = "/ai";
 const NAME = "Máy tính phần trăm AI";
-const TITLE = "Máy Tính Phần Trăm AI - Hỏi Bằng Tiếng Việt | phantram.online";
+const TITLE = "Máy Tính Phần Trăm AI - Hỏi Bằng Tiếng Việt | 1phantram.com";
 const DESC =
   "Máy tính phần trăm bằng AI. Gõ câu hỏi tự nhiên bằng tiếng Việt như 'lương 25 triệu trừ 10% bảo hiểm còn bao nhiêu', AI tự hiểu, tự tính, tự giải thích từng bước.";
 
 export const metadata: Metadata = {
   title: TITLE,
   description: DESC,
-  alternates: { canonical: `https://phantram.online${URL_PATH}` },
+  alternates: { canonical: `https://1phantram.com${URL_PATH}` },
   openGraph: {
     title: TITLE,
     description: DESC,
-    url: `https://phantram.online${URL_PATH}`,
-    siteName: "phantram.online",
+    url: `https://1phantram.com${URL_PATH}`,
+    siteName: "1phantram.com",
     images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
     locale: "vi_VN",
     type: "website",
@@ -48,7 +48,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Dữ liệu câu hỏi của tôi có được lưu lại không?",
-    a: "Câu hỏi được gửi tới mô hình AI (Google Gemini qua OpenRouter) để xử lý và không lưu trên máy chủ phantram.online. Lịch sử 10 câu hỏi gần nhất chỉ lưu trong localStorage trên trình duyệt của bạn — bạn có thể xóa bất cứ lúc nào.",
+    a: "Câu hỏi được gửi tới mô hình AI (Google Gemini qua OpenRouter) để xử lý và không lưu trên máy chủ 1phantram.com. Lịch sử 10 câu hỏi gần nhất chỉ lưu trong localStorage trên trình duyệt của bạn — bạn có thể xóa bất cứ lúc nào.",
   },
 ];
 
@@ -58,7 +58,7 @@ const jsonLd = {
     {
       "@type": "WebApplication",
       name: NAME,
-      url: `https://phantram.online${URL_PATH}`,
+      url: `https://1phantram.com${URL_PATH}`,
       applicationCategory: "UtilitiesApplication",
       operatingSystem: "Any",
       inLanguage: "vi-VN",
@@ -73,8 +73,8 @@ const jsonLd = {
     {
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Trang chủ", item: "https://phantram.online" },
-        { "@type": "ListItem", position: 2, name: NAME, item: `https://phantram.online${URL_PATH}` },
+        { "@type": "ListItem", position: 1, name: "Trang chủ", item: "https://1phantram.com" },
+        { "@type": "ListItem", position: 2, name: NAME, item: `https://1phantram.com${URL_PATH}` },
       ],
     },
     {
@@ -211,7 +211,7 @@ export default function AIPage() {
       </article>
 
       <footer className="text-center py-4 text-xs" style={{ color: "var(--text-muted)" }}>
-        © 2026 phantram.online — Máy tính phần trăm bằng AI
+        © 2026 1phantram.com — Máy tính phần trăm bằng AI
       </footer>
     </>
   );

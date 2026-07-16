@@ -5,7 +5,7 @@ import LatestBlogPosts from "@/components/LatestBlogPosts";
 import BlogIndexFull from "@/components/BlogIndexFull";
 import RichSnippetBlocks from "@/components/RichSnippetBlocks";
 
-const SITE_URL = "https://phantram.online";
+const SITE_URL = "https://1phantram.com";
 
 const TOOL_ITEMS: { name: string; url: string }[] = [
   { name: "Tính % của một giá trị", url: `${SITE_URL}/tinh-phan-tram` },
@@ -32,7 +32,7 @@ const jsonLd = {
   "@graph": [
     {
       "@type": "ItemList",
-      name: "17 công cụ tính phần trăm phantram.online",
+      name: "17 công cụ tính phần trăm 1phantram.com",
       itemListOrder: "https://schema.org/ItemListOrderAscending",
       numberOfItems: TOOL_ITEMS.length,
       itemListElement: TOOL_ITEMS.map((t, i) => ({
@@ -55,7 +55,7 @@ const jsonLd = {
     },
     {
       "@type": "SoftwareApplication",
-      name: "phantram.online",
+      name: "1phantram.com",
       url: SITE_URL,
       applicationCategory: "FinanceApplication",
       operatingSystem: "Web",

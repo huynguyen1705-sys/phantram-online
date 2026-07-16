@@ -66,11 +66,15 @@ const CLUSTERS: Cluster[] = [
   },
 ];
 
-const BLOG_DOMAIN = "https://blog.phantram.online";
-const WP_API = `${BLOG_DOMAIN}/wp-json/wp/v2`;
+const BLOG_DOMAIN = "https://1phantram.com/blog";
+const WP_API = "https://blog.phantram.online/wp-json/wp/v2";
 
 function stripHtml(html: string) {
   return html.replace(/<[^>]+>/g, "").replace(/&[^;]+;/g, " ").trim();
+}
+
+function blogPublicUrl(link: string): string {
+  return link.replace(/^https:\/\/blog\.phantram\.online/i, "https://1phantram.com/blog");
 }
 
 export default function BlogSection() {
@@ -170,7 +174,7 @@ export default function BlogSection() {
               return (
                 <a
                   key={post.id}
-                  href={post.link}
+                  href={blogPublicUrl(post.link)}
                   className="flex gap-3 rounded-2xl border p-3 hover:opacity-80 transition-opacity"
                   style={{ background: "var(--card)", borderColor: "var(--border)" }}
                 >

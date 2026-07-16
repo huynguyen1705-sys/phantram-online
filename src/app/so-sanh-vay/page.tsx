@@ -11,12 +11,12 @@ const DESC =
 export const metadata: Metadata = {
   title: TITLE,
   description: DESC,
-  alternates: { canonical: `https://phantram.online${URL_PATH}` },
+  alternates: { canonical: `https://1phantram.com${URL_PATH}` },
   openGraph: {
     title: TITLE,
     description: DESC,
-    url: `https://phantram.online${URL_PATH}`,
-    siteName: "phantram.online",
+    url: `https://1phantram.com${URL_PATH}`,
+    siteName: "1phantram.com",
     images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
     locale: "vi_VN",
     type: "website",
@@ -115,7 +115,7 @@ const jsonLd = {
     {
       "@type": "WebPage",
       name: TITLE,
-      url: `https://phantram.online${URL_PATH}`,
+      url: `https://1phantram.com${URL_PATH}`,
       description: DESC,
       inLanguage: "vi-VN",
       datePublished: META.lastUpdated,
@@ -124,8 +124,8 @@ const jsonLd = {
     {
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Trang chủ", item: "https://phantram.online" },
-        { "@type": "ListItem", position: 2, name: "So sánh lãi suất vay", item: `https://phantram.online${URL_PATH}` },
+        { "@type": "ListItem", position: 1, name: "Trang chủ", item: "https://1phantram.com" },
+        { "@type": "ListItem", position: 2, name: "So sánh lãi suất vay", item: `https://1phantram.com${URL_PATH}` },
       ],
     },
     {
@@ -160,7 +160,7 @@ export default function Page() {
               <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ background: "var(--primary)" }}>%</div>
               <div>
                 <p className="font-bold text-base leading-tight" style={{ color: "var(--text)" }}>Phần Trăm</p>
-                <p className="text-xs" style={{ color: "var(--text-muted)" }}>phantram.online</p>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>1phantram.com</p>
               </div>
             </Link>
             <Link
@@ -504,11 +504,11 @@ export default function Page() {
             </h2>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {[
-                { title: "Lãi kép là gì — vì sao vay càng lâu càng đau", url: "https://blog.phantram.online/lai-kep-la-gi/", icon: "❄️" },
-                { title: "Quy tắc 72 — bao lâu thì nợ gấp đôi?", url: "https://blog.phantram.online/quy-tac-72/", icon: "⏱️" },
-                { title: "ROI là gì & cách tính", url: "https://blog.phantram.online/roi-la-gi-cach-tinh/", icon: "📈" },
-                { title: "Phần trăm trong tài chính", url: "https://blog.phantram.online/phan-tram-trong-tai-chinh/", icon: "💼" },
-                { title: "CAGR — tỷ lệ tăng trưởng kép", url: "https://blog.phantram.online/cagr-la-gi/", icon: "📊" },
+                { title: "Lãi kép là gì — vì sao vay càng lâu càng đau", url: "https://1phantram.com/blog/lai-kep-la-gi/", icon: "❄️" },
+                { title: "Quy tắc 72 — bao lâu thì nợ gấp đôi?", url: "https://1phantram.com/blog/quy-tac-72/", icon: "⏱️" },
+                { title: "ROI là gì & cách tính", url: "https://1phantram.com/blog/roi-la-gi-cach-tinh/", icon: "📈" },
+                { title: "Phần trăm trong tài chính", url: "https://1phantram.com/blog/phan-tram-trong-tai-chinh/", icon: "💼" },
+                { title: "CAGR — tỷ lệ tăng trưởng kép", url: "https://1phantram.com/blog/cagr-la-gi/", icon: "📊" },
               ].map((b) => (
                 <a
                   key={b.url}
@@ -581,7 +581,7 @@ export default function Page() {
         </main>
 
         <footer className="text-center py-6 text-xs" style={{ color: "var(--text-muted)" }}>
-          © 2026 phantram.online — Công cụ tính % miễn phí
+          © 2026 1phantram.com — Công cụ tính % miễn phí
         </footer>
       </div>
     </>

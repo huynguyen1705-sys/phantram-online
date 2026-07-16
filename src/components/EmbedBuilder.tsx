@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 
-const SITE = "https://phantram.online";
+const SITE = "https://1phantram.com";
 
 type Tool = { slug: string; label: string; icon: string };
 
@@ -58,9 +58,9 @@ export default function EmbedBuilder() {
   const src = `${SITE}/embed/${slug}?theme=${theme}`;
   const iframeId = `phantram-${slug}`;
 
-  const simpleCode = `<iframe src="${src}" width="${width}" height="${autoHeight ? 600 : height}" style="border:0;max-width:100%;" loading="lazy" title="Máy tính ${tool.label} – phantram.online"></iframe>`;
+  const simpleCode = `<iframe src="${src}" width="${width}" height="${autoHeight ? 600 : height}" style="border:0;max-width:100%;" loading="lazy" title="Máy tính ${tool.label} – 1phantram.com"></iframe>`;
 
-  const autoCode = `<iframe id="${iframeId}" src="${src}" width="${width}" height="${autoHeight ? 600 : height}" style="border:0;max-width:100%;" loading="lazy" title="Máy tính ${tool.label} – phantram.online"></iframe>
+  const autoCode = `<iframe id="${iframeId}" src="${src}" width="${width}" height="${autoHeight ? 600 : height}" style="border:0;max-width:100%;" loading="lazy" title="Máy tính ${tool.label} – 1phantram.com"></iframe>
 <script>
   window.addEventListener('message', function(e) {
     if (e.data && e.data.type === 'phantram-embed') {

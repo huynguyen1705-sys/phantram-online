@@ -10,22 +10,22 @@ const DESC =
 export const metadata: Metadata = {
   title: TITLE,
   description: DESC,
-  alternates: { canonical: `https://phantram.online${URL_PATH}` },
+  alternates: { canonical: `https://1phantram.com${URL_PATH}` },
   openGraph: {
     title: TITLE,
     description: DESC,
-    url: `https://phantram.online${URL_PATH}`,
-    siteName: "phantram.online",
+    url: `https://1phantram.com${URL_PATH}`,
+    siteName: "1phantram.com",
     locale: "vi_VN",
     type: "website",
-    images: [{ url: "https://phantram.online/og-image.jpg", width: 1200, height: 630 }],
+    images: [{ url: "https://1phantram.com/og-image.jpg", width: 1200, height: 630 }],
   },
   twitter: { card: "summary_large_image", title: TITLE, description: DESC },
 };
 
 const FAQ = [
   {
-    q: "Nhúng widget phantram.online có mất phí không?",
+    q: "Nhúng widget 1phantram.com có mất phí không?",
     a: "Hoàn toàn miễn phí và không giới hạn. Chỉ cần copy đoạn code iframe và dán vào website của bạn. Không cần đăng ký tài khoản, không cần API key.",
   },
   {
@@ -42,7 +42,7 @@ const FAQ = [
   },
   {
     q: "Có cần ghi nguồn không? Backlink thế nào?",
-    a: "Widget tự hiển thị dòng \"Powered by phantram.online\" link về trang công cụ gốc — không cần thao tác thêm. Đây là backlink dofollow tự nhiên, có lợi cho cả 2 bên.",
+    a: "Widget tự hiển thị dòng \"Powered by 1phantram.com\" link về trang công cụ gốc — không cần thao tác thêm. Đây là backlink dofollow tự nhiên, có lợi cho cả 2 bên.",
   },
 ];
 
@@ -52,7 +52,7 @@ const jsonLd = {
     {
       "@type": "WebApplication",
       name: "Phantram Embed Widget",
-      url: `https://phantram.online${URL_PATH}`,
+      url: `https://1phantram.com${URL_PATH}`,
       applicationCategory: "UtilitiesApplication",
       operatingSystem: "Any",
       offers: { "@type": "Offer", price: "0", priceCurrency: "VND" },
@@ -61,8 +61,8 @@ const jsonLd = {
     {
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Trang chủ", item: "https://phantram.online" },
-        { "@type": "ListItem", position: 2, name: "Nhúng widget", item: `https://phantram.online${URL_PATH}` },
+        { "@type": "ListItem", position: 1, name: "Trang chủ", item: "https://1phantram.com" },
+        { "@type": "ListItem", position: 2, name: "Nhúng widget", item: `https://1phantram.com${URL_PATH}` },
       ],
     },
     {
@@ -89,7 +89,7 @@ export default function Page() {
               <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ background: "var(--primary)" }}>%</div>
               <div>
                 <p className="font-bold text-base leading-tight" style={{ color: "var(--text)" }}>Phần Trăm</p>
-                <p className="text-xs" style={{ color: "var(--text-muted)" }}>phantram.online</p>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>1phantram.com</p>
               </div>
             </Link>
             <Link
@@ -115,7 +115,7 @@ export default function Page() {
           {/* Hero */}
           <section className="text-center">
             <h1 className="text-2xl lg:text-4xl font-bold mb-3" style={{ color: "var(--text)" }}>
-              🧩 Nhúng calculator phantram.online vào website của bạn
+              🧩 Nhúng calculator 1phantram.com vào website của bạn
             </h1>
             <p className="text-base lg:text-lg max-w-2xl mx-auto" style={{ color: "var(--text-muted)" }}>
               Chọn công cụ → tuỳ chỉnh giao diện → copy 1 đoạn code → dán vào blog, website, WordPress…
@@ -203,7 +203,7 @@ export default function Page() {
         </main>
 
         <footer className="text-center py-6 text-xs" style={{ color: "var(--text-muted)" }}>
-          © 2026 phantram.online — Công cụ tính % miễn phí
+          © 2026 1phantram.com — Công cụ tính % miễn phí
         </footer>
       </div>
     </>

@@ -4,15 +4,15 @@ import Calculator from "@/components/Calculator";
 
 const URL_PATH = "/chia-bill-tip";
 const NAME = "Chia bill nhóm + Tip - VAT - Theo món";
-const TITLE = "Chia Bill Nhóm + Tính Tip - VAT - Theo Món | phantram.online";
+const TITLE = "Chia Bill Nhóm + Tính Tip - VAT - Theo Món | 1phantram.com";
 const DESC =
   "Chia bill nhà hàng chuẩn: chia đều, chia theo món ăn riêng từng người, hoặc theo % tùy ý. Tính VAT 8% + Tip % tự động. Copy gửi Zalo cho cả nhóm trong 1 click.";
 
 export const metadata: Metadata = {
   title: TITLE,
   description: DESC,
-  alternates: { canonical: `https://phantram.online${URL_PATH}` },
-  openGraph: { title: TITLE, description: DESC, url: `https://phantram.online${URL_PATH}`, siteName: "phantram.online", images: [{ url: `${URL_PATH}/opengraph-image`, width: 1200, height: 630 }], locale: "vi_VN", type: "website" },
+  alternates: { canonical: `https://1phantram.com${URL_PATH}` },
+  openGraph: { title: TITLE, description: DESC, url: `https://1phantram.com${URL_PATH}`, siteName: "1phantram.com", images: [{ url: `${URL_PATH}/opengraph-image`, width: 1200, height: 630 }], locale: "vi_VN", type: "website" },
   twitter: { card: "summary_large_image", title: TITLE, description: DESC, images: [`${URL_PATH}/opengraph-image`] },
 };
 
@@ -27,8 +27,8 @@ const FAQ = [
 const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
-    { "@type": "WebApplication", name: NAME, url: `https://phantram.online${URL_PATH}`, applicationCategory: "UtilitiesApplication", operatingSystem: "Any", offers: { "@type": "Offer", price: "0", priceCurrency: "VND" }, aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", ratingCount: "1342", bestRating: "5", worstRating: "1" } },
-    { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Trang chủ", item: "https://phantram.online" }, { "@type": "ListItem", position: 2, name: NAME, item: `https://phantram.online${URL_PATH}` }] },
+    { "@type": "WebApplication", name: NAME, url: `https://1phantram.com${URL_PATH}`, applicationCategory: "UtilitiesApplication", operatingSystem: "Any", offers: { "@type": "Offer", price: "0", priceCurrency: "VND" }, aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", ratingCount: "1342", bestRating: "5", worstRating: "1" } },
+    { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Trang chủ", item: "https://1phantram.com" }, { "@type": "ListItem", position: 2, name: NAME, item: `https://1phantram.com${URL_PATH}` }] },
     { "@type": "FAQPage", mainEntity: FAQ.map(f => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) },
   ],
 };
@@ -83,7 +83,7 @@ export default function Page() {
         ))}
       </article>
       <footer className="text-center py-4 text-xs" style={{ color: "var(--text-muted)" }}>
-        © 2026 phantram.online — Công cụ tính % miễn phí
+        © 2026 1phantram.com — Công cụ tính % miễn phí
       </footer>
     </>
   );

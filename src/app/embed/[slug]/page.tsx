@@ -39,9 +39,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const name = tab?.label ?? "phần trăm";
   const toolPath = TAB_URL_MAP[tabId];
   return {
-    title: `Máy tính ${name} – phantram.online`,
-    description: `Widget máy tính ${name} của phantram.online — nhúng miễn phí vào website của bạn.`,
-    alternates: { canonical: `https://phantram.online${toolPath}` },
+    title: `Máy tính ${name} – 1phantram.com`,
+    description: `Widget máy tính ${name} của 1phantram.com — nhúng miễn phí vào website của bạn.`,
+    alternates: { canonical: `https://1phantram.com${toolPath}` },
     robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
   };
 }

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
-const BASE = "https://phantram.online";
-const BLOG = "https://blog.phantram.online";
+const BASE = "https://1phantram.com";
+const BLOG = "https://1phantram.com/blog";
 
 // 28 bài đã có trên blog WordPress
 const BLOG_SLUGS = [

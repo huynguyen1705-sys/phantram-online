@@ -58,7 +58,7 @@ export default function CompareCalculations() {
   const copyTable = async () => {
     if (!compared || compared.length === 0) return;
     const lines: string[] = [];
-    lines.push("So sánh phép tính — phantram.online");
+    lines.push("So sánh phép tính — 1phantram.com");
     lines.push("=".repeat(40));
     compared.forEach((it, i) => {
       lines.push(`\n[${i + 1}] ${it.label}`);

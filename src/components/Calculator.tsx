@@ -485,7 +485,7 @@ function TabTip({ initial }: { initial?: DecodedTip } = {}) {
   let displaySub = "";
   let shareText = "";
   let shareTitle = "Chia bill nhóm";
-  const buildHeader = () => `🧾 Chia bill phantram.online\n─────────────────`;
+  const buildHeader = () => `🧾 Chia bill 1phantram.com\n─────────────────`;
   const buildFooter = () => `─────────────────\n(VAT ${vatN}% + Tip ${tipN}%${tipOnVat ? " sau VAT" : " trước VAT"})`;
 
   if (mode === "equal" && aHasBill) {
@@ -2584,14 +2584,14 @@ function TabSoiSale() {
       <ShareModal
         open={shareOpen}
         onClose={() => setShareOpen(false)}
-        url={`https://phantram.online/soi-sale`}
+        url={`https://1phantram.com/soi-sale`}
         title={`Soi sale ${row1.name || "Shopee/Lazada"}`}
         text={(() => {
           const calc = analyzeSale(row1);
-          if (!calc) return "🛒 Soi sale chống fake giá tại phantram.online/soi-sale";
+          if (!calc) return "🛒 Soi sale chống fake giá tại 1phantram.com/soi-sale";
           return `🛒 ${row1.name || "Sản phẩm"}: trả thực ${formatNum(calc.finalPrice)}đ — giảm ${calc.realDiscount.toFixed(1)}% so giá gạch chéo. ${calc.verdict.label}`;
         })()}
-        ogImageUrl={`https://phantram.online/soi-sale/opengraph-image?p=${encodeURIComponent(row1.price || "")}&o=${encodeURIComponent(row1.origPrice || "")}`}
+        ogImageUrl={`https://1phantram.com/soi-sale/opengraph-image?p=${encodeURIComponent(row1.price || "")}&o=${encodeURIComponent(row1.origPrice || "")}`}
       />
     </div>
   );
@@ -3080,12 +3080,12 @@ function CalculatorInner({ initialTab, singleTab = false, breadcrumb, embed = fa
         <div className="mt-2 text-center text-xs" style={{ color: "var(--text-muted)" }}>
           Powered by{" "}
           <a
-            href={`https://phantram.online${toolPath}`}
+            href={`https://1phantram.com${toolPath}`}
             target="_blank"
             rel="noopener"
             style={{ color: "var(--primary)", fontWeight: 600 }}
           >
-            phantram.online
+            1phantram.com
           </a>
         </div>
       </div>
@@ -3101,12 +3101,12 @@ function CalculatorInner({ initialTab, singleTab = false, breadcrumb, embed = fa
             <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ background: "var(--primary)" }}>%</div>
             <div>
               <p className="font-bold text-base leading-tight" style={{ color: "var(--text)" }}>Phần Trăm</p>
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>phantram.online</p>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>1phantram.com</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <a
-              href="https://blog.phantram.online/"
+              href="https://1phantram.com/blog/"
               className="flex items-center gap-1 rounded-xl px-3 h-9 text-sm font-semibold transition-all active:scale-95 hover:opacity-80"
               style={{ background: "var(--primary)", color: "#fff" }}
             >
@@ -3367,7 +3367,7 @@ function CalculatorInner({ initialTab, singleTab = false, breadcrumb, embed = fa
 
       {!singleTab && (
         <footer className="text-center py-4 text-xs" style={{ color: "var(--text-muted)" }}>
-          © 2026 phantram.online — Công cụ tính % miễn phí
+          © 2026 1phantram.com — Công cụ tính % miễn phí
         </footer>
       )}
     </div>

@@ -134,8 +134,8 @@ export async function POST(req: NextRequest) {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://phantram.online",
-        "X-Title": "phantram.online AI Parser",
+        "HTTP-Referer": "https://1phantram.com",
+        "X-Title": "1phantram.com AI Parser",
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-lite",

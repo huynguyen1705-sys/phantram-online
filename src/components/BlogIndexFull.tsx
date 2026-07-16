@@ -36,6 +36,10 @@ function decodeEntities(s: string): string {
     .replace(/&#8230;/g, "…");
 }
 
+function blogPublicUrl(link: string): string {
+  return link.replace(/^https:\/\/blog\.phantram\.online/i, "https://1phantram.com/blog");
+}
+
 async function fetchAllPosts(): Promise<WPPost[]> {
   try {
     const res = await fetch(
@@ -56,15 +60,15 @@ export default async function BlogIndexFull() {
   return (
     <section
       className="blog-index-full max-w-5xl mx-auto px-4 py-8"
-      aria-label="Toàn bộ bài viết blog phantram.online theo chủ đề"
+      aria-label="Toàn bộ bài viết blog 1phantram.com theo chủ đề"
     >
       <h2 id="kho-bai-viet" className="text-xl font-bold mb-2" style={{ color: "var(--text)" }}>
         📚 Kho Bài Viết Blog Theo Chủ Đề
       </h2>
       <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
         Toàn bộ {posts.length} bài hướng dẫn tính phần trăm, thống kê, tài chính &amp; kinh doanh tại{" "}
-        <a href="https://blog.phantram.online/" rel="noopener" style={{ color: "var(--primary)" }}>
-          blog.phantram.online
+        <a href="https://1phantram.com/blog/" rel="noopener" style={{ color: "var(--primary)" }}>
+          1phantram.com/blog
         </a>
         .
       </p>
@@ -100,7 +104,7 @@ export default async function BlogIndexFull() {
                 {groupPosts.map((post) => (
                   <li key={post.id}>
                     <a
-                      href={post.link}
+                      href={blogPublicUrl(post.link)}
                       rel="noopener"
                       className="block px-4 py-2.5 text-sm hover:opacity-80 transition-opacity"
                       style={{ color: "var(--text)" }}
@@ -117,7 +121,7 @@ export default async function BlogIndexFull() {
 
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-center">
         <a
-          href="https://blog.phantram.online/muc-luc/"
+          href="https://1phantram.com/blog/muc-luc/"
           rel="noopener"
           className="inline-flex items-center gap-1 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all active:scale-95"
           style={{ background: "var(--primary)", color: "#fff" }}
@@ -125,12 +129,12 @@ export default async function BlogIndexFull() {
           📚 Mục lục toàn bộ bài viết
         </a>
         <a
-          href="https://blog.phantram.online/"
+          href="https://1phantram.com/blog/"
           rel="noopener"
           className="inline-flex items-center gap-1 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all active:scale-95"
           style={{ background: "var(--primary)", color: "#fff" }}
         >
-          📝 Xem toàn bộ blog phantram.online
+          📝 Xem toàn bộ blog 1phantram.com
         </a>
       </div>
     </section>

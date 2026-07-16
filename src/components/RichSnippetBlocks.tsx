@@ -22,9 +22,9 @@ const SITELINKS = [
 
 const FAQ = [
   ["Tính phần trăm nhanh nhất bằng công thức nào?", "Dùng công thức giá trị × phần trăm ÷ 100. Ví dụ 30% của 200.000đ = 60.000đ."],
-  ["Google có thể hiện FAQ và sitelinks của phantram.online không?", "Trang đã có FAQPage, WebSite SearchAction, ItemList, WebApplication, BreadcrumbList và các link điều hướng rõ ràng để tăng cơ hội rich results."],
+  ["Google có thể hiện FAQ và sitelinks của 1phantram.com không?", "Trang đã có FAQPage, WebSite SearchAction, ItemList, WebApplication, BreadcrumbList và các link điều hướng rõ ràng để tăng cơ hội rich results."],
   ["Nên dùng công cụ nào khi mua sắm?", "Dùng Tính giảm giá để ra giá sau sale, Soi sale để kiểm tra sale ảo và So sánh giá để chọn cửa hàng rẻ hơn."],
-  ["Có thể tìm bài blog từ main web không?", "Có. Ô tìm kiếm bên dưới trỏ thẳng sang blog.phantram.online và toàn bộ link blog được render sẵn để Googlebot đọc được."],
+  ["Có thể tìm bài blog từ main web không?", "Có. Ô tìm kiếm bên dưới trỏ thẳng sang 1phantram.com/blog và toàn bộ link blog được render sẵn để Googlebot đọc được."],
 ];
 
 export default function RichSnippetBlocks() {
@@ -32,8 +32,8 @@ export default function RichSnippetBlocks() {
     <section className="max-w-5xl mx-auto px-4 py-8" aria-label="Rich snippets và điều hướng nhanh">
       <div className="rounded-2xl border p-5 mb-6" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
         <h2 id="tim-kiem" className="text-xl font-bold mb-3" style={{ color: "var(--text)" }}>Tìm kiếm công thức, công cụ và bài hướng dẫn</h2>
-        <form action="https://blog.phantram.online/" method="get" role="search" className="flex flex-col sm:flex-row gap-3">
-          <label htmlFor="rich-search" className="sr-only">Tìm kiếm trên blog phantram.online</label>
+        <form action="https://1phantram.com/blog/" method="get" role="search" className="flex flex-col sm:flex-row gap-3">
+          <label htmlFor="rich-search" className="sr-only">Tìm kiếm trên blog 1phantram.com</label>
           <input
             id="rich-search"
             name="s"
@@ -49,7 +49,7 @@ export default function RichSnippetBlocks() {
       </div>
 
       <h2 id="sitelinks" className="text-xl font-bold mb-3" style={{ color: "var(--text)" }}>Liên kết nhanh được tìm nhiều</h2>
-      <nav aria-label="Sitelinks phantram.online" className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+      <nav aria-label="Sitelinks 1phantram.com" className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
         {SITELINKS.map((item) => (
           <Link key={item.href} href={item.href} className="rounded-xl border px-4 py-3 text-sm font-semibold hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text)", background: "var(--card)" }}>
             {item.label}

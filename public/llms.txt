@@ -1,22 +1,22 @@
-# phantram.online
+# 1phantram.com
 
 > Công cụ tính phần trăm (%) online miễn phí, nhanh và chính xác nhất Việt Nam. Tính phần trăm của một số, tỷ lệ phần trăm giữa hai số, tăng/giảm phần trăm, phần trăm thay đổi, chiết khấu, lãi suất — kèm công thức và ví dụ minh họa.
 
 ## Giới thiệu
 
-phantram.online là bộ công cụ tính phần trăm trực tuyến dành cho người Việt: học sinh, sinh viên, kế toán, người mua sắm và bất kỳ ai cần tính toán tỷ lệ phần trăm nhanh. Miễn phí, không cần đăng ký, chạy ngay trên trình duyệt (web + mobile).
+1phantram.com là bộ công cụ tính phần trăm trực tuyến dành cho người Việt: học sinh, sinh viên, kế toán, người mua sắm và bất kỳ ai cần tính toán tỷ lệ phần trăm nhanh. Miễn phí, không cần đăng ký, chạy ngay trên trình duyệt (web + mobile).
 
 ## Các công cụ chính
 
-- [Tính phần trăm của một số](https://phantram.online/): X% của Y là bao nhiêu.
-- [Tính tỷ lệ phần trăm giữa hai số](https://phantram.online/): A là bao nhiêu % của B.
-- [Tính phần trăm tăng/giảm](https://phantram.online/): thay đổi từ giá trị cũ sang mới.
-- [So sánh vay và tiết kiệm](https://phantram.online/so-sanh-vay).
-- [Mục lục bài viết blog](https://phantram.online/muc-luc/).
+- [Tính phần trăm của một số](https://1phantram.com/): X% của Y là bao nhiêu.
+- [Tính tỷ lệ phần trăm giữa hai số](https://1phantram.com/): A là bao nhiêu % của B.
+- [Tính phần trăm tăng/giảm](https://1phantram.com/): thay đổi từ giá trị cũ sang mới.
+- [So sánh vay và tiết kiệm](https://1phantram.com/so-sanh-vay).
+- [Mục lục bài viết blog](https://1phantram.com/muc-luc/).
 
 ## Kiến thức & hướng dẫn (Blog)
 
-- [Blog phần trăm](https://blog.phantram.online/): hướng dẫn cách tính phần trăm, lãi suất ngân hàng, conversion rate, chiết khấu, điểm phần trăm và các chủ đề tài chính liên quan.
+- [Blog phần trăm](https://1phantram.com/blog/): hướng dẫn cách tính phần trăm, lãi suất ngân hàng, conversion rate, chiết khấu, điểm phần trăm và các chủ đề tài chính liên quan.
 
 ## Công thức cốt lõi
 
@@ -26,5 +26,5 @@ phantram.online là bộ công cụ tính phần trăm trực tuyến dành cho 
 
 ## Liên hệ
 
-- Website: https://phantram.online
-- Blog: https://blog.phantram.online
+- Website: https://1phantram.com
+- Blog: https://1phantram.com/blog

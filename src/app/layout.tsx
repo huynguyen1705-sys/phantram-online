@@ -8,15 +8,15 @@ export const viewport: Viewport = {
   themeColor: "#2563eb",
 };
 
-const SITE_URL = "https://phantram.online";
+const SITE_URL = "https://1phantram.com";
 const OG_IMAGE = `${SITE_URL}/og-image.jpg`;
 const GA_ID = "G-G2DJ5FC3FB";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Tính Phần Trăm Online - Máy Tính % Miễn Phí | phantram.online",
-    template: "%s | phantram.online",
+    default: "Tính Phần Trăm Online - Máy Tính % Miễn Phí | 1phantram.com",
+    template: "%s | 1phantram.com",
   },
   description:
     "Công cụ tính phần trăm online miễn phí, nhanh nhất Việt Nam. Tính % của giá trị, % tăng giảm, giảm giá, lãi suất ngân hàng, ROI, lãi kép. Tối ưu mobile.",
@@ -43,9 +43,9 @@ export const metadata: Metadata = {
     "% giảm cân mục tiêu",
     "tính calo TDEE BMR",
   ],
-  authors: [{ name: "phantram.online" }],
-  creator: "phantram.online",
-  publisher: "phantram.online",
+  authors: [{ name: "1phantram.com" }],
+  creator: "1phantram.com",
+  publisher: "1phantram.com",
   alternates: {
     canonical: SITE_URL,
   },
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     title: "Tính Phần Trăm Online - Máy Tính % Miễn Phí",
     description: "Công cụ tính phần trăm online miễn phí, nhanh nhất Việt Nam. Tối ưu cho mobile.",
     url: SITE_URL,
-    siteName: "phantram.online",
+    siteName: "1phantram.com",
     locale: "vi_VN",
     type: "website",
     images: [
@@ -97,7 +97,7 @@ const jsonLdWebSite = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   "@id": `${SITE_URL}/#website`,
-  name: "phantram.online",
+  name: "1phantram.com",
   alternateName: ["Phần Trăm Online", "Máy tính phần trăm"],
   url: SITE_URL,
   inLanguage: "vi-VN",
@@ -105,16 +105,16 @@ const jsonLdWebSite = {
   potentialAction: [
     {
       "@type": "SearchAction",
-      name: "Tìm bài hướng dẫn trên blog phantram.online",
+      name: "Tìm bài hướng dẫn trên blog 1phantram.com",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: "https://blog.phantram.online/?s={search_term_string}",
+        urlTemplate: "https://1phantram.com/blog/?s={search_term_string}",
       },
       "query-input": "required name=search_term_string",
     },
     {
       "@type": "SearchAction",
-      name: "Tìm công cụ trên phantram.online",
+      name: "Tìm công cụ trên 1phantram.com",
       target: {
         "@type": "EntryPoint",
         urlTemplate: `${SITE_URL}/?q={search_term_string}`,
@@ -128,11 +128,11 @@ const jsonLdOrganization = {
   "@context": "https://schema.org",
   "@type": "Organization",
   "@id": `${SITE_URL}/#organization`,
-  name: "phantram.online",
+  name: "1phantram.com",
   alternateName: "Phần Trăm Online",
   url: SITE_URL,
   logo: `${SITE_URL}/icon-512.png`,
-  sameAs: ["https://blog.phantram.online/"],
+  sameAs: ["https://1phantram.com/blog/"],
   contactPoint: {
     "@type": "ContactPoint",
     contactType: "customer support",
@@ -144,7 +144,7 @@ const jsonLdOrganization = {
 const jsonLdSiteNavigation = {
   "@context": "https://schema.org",
   "@type": "ItemList",
-  name: "Sitelinks phantram.online",
+  name: "Sitelinks 1phantram.com",
   itemListElement: [
     ["Tính phần trăm", `${SITE_URL}/tinh-phan-tram`],
     ["Tính giảm giá", `${SITE_URL}/tinh-giam-gia`],
@@ -153,7 +153,7 @@ const jsonLdSiteNavigation = {
     ["So sánh lãi tiết kiệm", `${SITE_URL}/so-sanh-tiet-kiem`],
     ["So sánh lãi vay", `${SITE_URL}/so-sanh-vay`],
     ["Máy tính AI", `${SITE_URL}/ai`],
-    ["Blog phần trăm", "https://blog.phantram.online/"],
+    ["Blog phần trăm", "https://1phantram.com/blog/"],
   ].map(([name, url], index) => ({
     "@type": "ListItem",
     position: index + 1,
@@ -234,7 +234,7 @@ const jsonLdFAQ = {
       name: "Máy tính phần trăm online có miễn phí không?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Có. phantram.online hoàn toàn miễn phí, không cần đăng ký, không quảng cáo, hoạt động trên mọi thiết bị.",
+        text: "Có. 1phantram.com hoàn toàn miễn phí, không cần đăng ký, không quảng cáo, hoạt động trên mọi thiết bị.",
       },
     },
   ],
@@ -275,7 +275,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('set','linker',{domains:['phantram.online','blog.phantram.online']});gtag('config','${GA_ID}',{anonymize_ip:true});`,
+            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('set','linker',{domains:['1phantram.com','1phantram.com/blog']});gtag('config','${GA_ID}',{anonymize_ip:true});`,
           }}
         />
       </head>

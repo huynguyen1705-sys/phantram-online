@@ -11,7 +11,7 @@ export default function IntroSEO() {
         </h1>
 
         <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--text)" }}>
-          <strong>phantram.online</strong> là công cụ <strong>tính phần trăm</strong> online miễn phí,
+          <strong>1phantram.com</strong> là công cụ <strong>tính phần trăm</strong> online miễn phí,
           tối ưu cho mobile, không cần đăng ký. Hỗ trợ đầy đủ các phép tính từ cơ bản
           đến nâng cao: tính % của một giá trị, % tăng giảm, % giảm giá khi mua sắm,
           lãi suất ngân hàng đơn và kép, ROI đầu tư, và tỷ lệ phần trăm trong thống kê.
@@ -63,7 +63,7 @@ export default function IntroSEO() {
         <div className="text-sm leading-relaxed space-y-3">
           <details className="cursor-pointer">
             <summary className="font-semibold">
-              Tính phần trăm trên phantram.online có miễn phí không?
+              Tính phần trăm trên 1phantram.com có miễn phí không?
             </summary>
             <p className="mt-1.5 ml-1" style={{ color: "var(--text-muted)" }}>
               Có. Hoàn toàn miễn phí, không quảng cáo, không cần đăng ký, không thu thập dữ liệu cá nhân.
@@ -80,7 +80,7 @@ export default function IntroSEO() {
           <details className="cursor-pointer">
             <summary className="font-semibold">Khác gì với máy tính phần trăm trên điện thoại?</summary>
             <p className="mt-1.5 ml-1" style={{ color: "var(--text-muted)" }}>
-              phantram.online có nhiều chế độ chuyên dụng: tính giảm giá, lãi suất, ROI, lãi kép —
+              1phantram.com có nhiều chế độ chuyên dụng: tính giảm giá, lãi suất, ROI, lãi kép —
               các phép tính phức tạp mà máy tính mặc định không có. Lịch sử cũng được lưu tự động.
             </p>
           </details>
@@ -117,11 +117,11 @@ export default function IntroSEO() {
             <p className="mt-1.5 ml-1" style={{ color: "var(--text-muted)" }}>
               Xem chi tiết tại{" "}
               <a
-                href="https://blog.phantram.online/"
+                href="https://1phantram.com/blog/"
                 className="font-semibold underline"
                 style={{ color: "var(--primary)" }}
               >
-                blog phantram.online
+                blog 1phantram.com
               </a>{" "}
               — 28+ bài hướng dẫn từ cơ bản đến tài chính cá nhân, lãi kép, ROI, CAGR.
             </p>
@@ -132,7 +132,7 @@ export default function IntroSEO() {
           className="text-xs mt-5 pt-4 border-t"
           style={{ color: "var(--text-muted)", borderColor: "var(--border)" }}
         >
-          phantram.online — Công cụ tính phần trăm online miễn phí, phát triển bởi đội ngũ
+          1phantram.com — Công cụ tính phần trăm online miễn phí, phát triển bởi đội ngũ
           người Việt, tối ưu cho mobile-first. Mọi phép tính đều dùng công thức toán học
           chuẩn quốc tế.
         </p>

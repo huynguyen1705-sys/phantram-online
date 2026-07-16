@@ -31,10 +31,10 @@ export default function HomeSEOContent() {
   }));
 
   return (
-    <article className="seo-content max-w-5xl mx-auto px-4 py-8" aria-label="Nội dung giới thiệu phantram.online">
+    <article className="seo-content max-w-5xl mx-auto px-4 py-8" aria-label="Nội dung giới thiệu 1phantram.com">
       <h1>Máy Tính Phần Trăm Online — Nhanh, Miễn Phí, Tối Ưu Mobile</h1>
       <p>
-        <strong>phantram.online</strong> là bộ <strong>17 công cụ tính phần trăm chuyên biệt</strong> dành riêng cho
+        <strong>1phantram.com</strong> là bộ <strong>17 công cụ tính phần trăm chuyên biệt</strong> dành riêng cho
         người Việt: từ tính % cơ bản, % tăng giảm, giảm giá, lãi suất ngân hàng đến lương net sau thuế TNCN 2026.
         Toàn bộ 100% <strong>miễn phí</strong>, <strong>không quảng cáo</strong>, tính toán client-side ngay trên
         trình duyệt nên tốc độ phản hồi gần như tức thì. Trang được tối ưu mobile-first, có lưu lịch sử, share kết
@@ -67,7 +67,7 @@ export default function HomeSEOContent() {
 
       <h2 id="moi">🆕 5 Tính Năng Mới Tháng 6/2026</h2>
       <p>
-        Tháng 6/2026, phantram.online phát hành 5 tính năng lớn để phục vụ nhu cầu thực tế của người dùng Việt:
+        Tháng 6/2026, 1phantram.com phát hành 5 tính năng lớn để phục vụ nhu cầu thực tế của người dùng Việt:
       </p>
       <ul>
         <li>
@@ -93,7 +93,7 @@ export default function HomeSEOContent() {
         </li>
       </ul>
 
-      <h2 id="tai-sao">Tại Sao Chọn phantram.online?</h2>
+      <h2 id="tai-sao">Tại Sao Chọn 1phantram.com?</h2>
       <ul>
         <li>⚡ <strong>Tính ngay không cần Enter</strong> — debounce 100ms, kết quả hiện liền khi gõ số.</li>
         <li>📱 <strong>Tối ưu mobile-first</strong> — hơn 60% người dùng truy cập từ điện thoại, layout & font-size cân chỉnh kỹ.</li>
@@ -136,9 +136,9 @@ export default function HomeSEOContent() {
         </li>
       </ul>
 
-      <h2 id="blog">Tích Hợp Blog phantram.online</h2>
+      <h2 id="blog">Tích Hợp Blog 1phantram.com</h2>
       <p>
-        Bên cạnh bộ công cụ tính toán, blog <a href="https://blog.phantram.online/" rel="noopener"><strong>blog.phantram.online</strong></a>{" "}
+        Bên cạnh bộ công cụ tính toán, blog <a href="https://1phantram.com/blog/" rel="noopener"><strong>1phantram.com/blog</strong></a>{" "}
         có hơn <strong>30 bài kiến thức</strong> về tài chính cá nhân, lãi suất ngân hàng, công thức %, đầu tư và
         case-study thực tế — được xuất bản và cập nhật hằng tuần. Danh sách bài viết mới nhất hiển thị ngay phía
         dưới (tự động đồng bộ từ blog).
@@ -168,7 +168,7 @@ export default function HomeSEOContent() {
         </p>
       </details>
       <details>
-        <summary>phantram.online có thu thập dữ liệu cá nhân không?</summary>
+        <summary>1phantram.com có thu thập dữ liệu cá nhân không?</summary>
         <p>
           Không. Mọi phép tính chạy hoàn toàn trên trình duyệt của bạn (client-side), số liệu không gửi về server.
           Chúng tôi chỉ dùng Google Analytics để đếm lượng truy cập ẩn danh phục vụ thống kê.

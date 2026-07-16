@@ -50,7 +50,7 @@ const BANNERS: Banner[] = [
     badge: "Cảnh báo",
   },
   {
-    href: "https://blog.phantram.online",
+    href: "https://1phantram.com/blog",
     external: true,
     icon: "📚",
     title: "Blog kiến thức",
