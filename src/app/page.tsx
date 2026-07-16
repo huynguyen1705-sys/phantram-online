@@ -3,6 +3,7 @@ import HomeFeatureBanners from "@/components/HomeFeatureBanners";
 import HomeSEOContent from "@/components/HomeSEOContent";
 import LatestBlogPosts from "@/components/LatestBlogPosts";
 import BlogIndexFull from "@/components/BlogIndexFull";
+import RichSnippetBlocks from "@/components/RichSnippetBlocks";
 
 const SITE_URL = "https://phantram.online";
 
@@ -42,6 +43,17 @@ const jsonLd = {
       })),
     },
     {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Trang chủ", item: SITE_URL },
+      ],
+    },
+    {
+      "@type": "Table",
+      name: "Bảng chọn công cụ tính phần trăm theo nhu cầu",
+      about: "So sánh các công cụ tính phần trăm, giảm giá, lãi suất, lãi vay và lương net",
+    },
+    {
       "@type": "SoftwareApplication",
       name: "phantram.online",
       url: SITE_URL,
@@ -74,6 +86,7 @@ export default function Home() {
       <Calculator />
       <HomeFeatureBanners />
       <HomeSEOContent />
+      <RichSnippetBlocks />
       <LatestBlogPosts />
       <BlogIndexFull />
     </>

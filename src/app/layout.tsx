@@ -96,18 +96,70 @@ export const metadata: Metadata = {
 const jsonLdWebSite = {
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": `${SITE_URL}/#website`,
+  name: "phantram.online",
+  alternateName: ["Phần Trăm Online", "Máy tính phần trăm"],
+  url: SITE_URL,
+  inLanguage: "vi-VN",
+  publisher: { "@id": `${SITE_URL}/#organization` },
+  potentialAction: [
+    {
+      "@type": "SearchAction",
+      name: "Tìm bài hướng dẫn trên blog phantram.online",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: "https://blog.phantram.online/?s={search_term_string}",
+      },
+      "query-input": "required name=search_term_string",
+    },
+    {
+      "@type": "SearchAction",
+      name: "Tìm công cụ trên phantram.online",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE_URL}/?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  ],
+};
+
+const jsonLdOrganization = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": `${SITE_URL}/#organization`,
   name: "phantram.online",
   alternateName: "Phần Trăm Online",
   url: SITE_URL,
-  inLanguage: "vi-VN",
-  potentialAction: {
-    "@type": "SearchAction",
-    target: {
-      "@type": "EntryPoint",
-      urlTemplate: "https://blog.phantram.online/?s={search_term_string}",
-    },
-    "query-input": "required name=search_term_string",
+  logo: `${SITE_URL}/icon-512.png`,
+  sameAs: ["https://blog.phantram.online/"],
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer support",
+    availableLanguage: ["vi"],
+    url: `${SITE_URL}/`,
   },
+};
+
+const jsonLdSiteNavigation = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: "Sitelinks phantram.online",
+  itemListElement: [
+    ["Tính phần trăm", `${SITE_URL}/tinh-phan-tram`],
+    ["Tính giảm giá", `${SITE_URL}/tinh-giam-gia`],
+    ["Lãi kép", `${SITE_URL}/lai-kep`],
+    ["Tính lương net", `${SITE_URL}/luong-net`],
+    ["So sánh lãi tiết kiệm", `${SITE_URL}/so-sanh-tiet-kiem`],
+    ["So sánh lãi vay", `${SITE_URL}/so-sanh-vay`],
+    ["Máy tính AI", `${SITE_URL}/ai`],
+    ["Blog phần trăm", "https://blog.phantram.online/"],
+  ].map(([name, url], index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    name,
+    url,
+  })),
 };
 
 const jsonLdApp = {
@@ -199,7 +251,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <script
           type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrganization) }}
+        />
+        <script
+          type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebSite) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSiteNavigation) }}
         />
         <script
           type="application/ld+json"
