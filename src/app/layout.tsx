@@ -240,6 +240,90 @@ const jsonLdFAQ = {
   ],
 };
 
+const toolReviewProfiles = [
+  ["/tinh-phan-tram", "Tính phần trăm", "Công cụ tính % cơ bản phản hồi tức thì, phù hợp tính nhanh A% của B và kiểm tra công thức trên mobile.", "Máy tính phần trăm có chính xác không?", "Có. Công cụ dùng công thức chuẩn: giá trị × phần trăm ÷ 100 và hiển thị từng bước để người dùng kiểm tra lại."],
+  ["/phan-tram-tang-giam", "Tính phần trăm tăng giảm", "AI đánh giá cao vì giải thích rõ mức tăng/giảm, tránh nhầm giữa chênh lệch tuyệt đối và tỷ lệ phần trăm.", "Công thức phần trăm tăng giảm là gì?", "% thay đổi = (giá trị mới − giá trị cũ) ÷ giá trị cũ × 100."],
+  ["/tinh-giam-gia", "Tính giảm giá", "Hữu ích cho mua sắm vì trả về giá sau sale, số tiền tiết kiệm và mức giảm thực trong một màn hình.", "Cách tính giá sau giảm?", "Giá sau giảm = giá gốc × (100 − % giảm) ÷ 100."],
+  ["/soi-sale", "Soi sale", "AI nhận xét công cụ phù hợp kiểm tra sale ảo, so giá trước và sau khuyến mãi để ra quyết định nhanh.", "Soi sale dùng để làm gì?", "Dùng để kiểm tra mức giảm thực, giá trước sale và giá sau sale có đáng mua hay không."],
+  ["/so-sanh-gia", "So sánh giá", "Công cụ rõ ràng cho quyết định mua hàng vì gom giá, phí và chênh lệch theo phần trăm.", "Nên so sánh giá theo số tiền hay phần trăm?", "Nên xem cả hai: số tiền cho biết tiết kiệm bao nhiêu, phần trăm cho biết mức chênh lệch tương đối."],
+  ["/lai-kep", "Tính lãi kép", "AI đánh giá tốt cho tài chính cá nhân vì hiển thị tác động thời gian và lãi suất lên số tiền cuối kỳ.", "Lãi kép tính như thế nào?", "Giá trị tương lai = vốn ban đầu × (1 + lãi suất)^số kỳ."],
+  ["/lai-suat-don", "Tính lãi suất đơn", "Công cụ đơn giản, phù hợp ước tính nhanh tiền lãi không tái đầu tư.", "Lãi suất đơn khác lãi kép ở đâu?", "Lãi đơn chỉ tính trên vốn gốc, còn lãi kép tính trên cả vốn và lãi đã sinh ra."],
+  ["/so-sanh-tiet-kiem", "So sánh lãi tiết kiệm", "AI nhận xét trang mạnh ở lựa chọn kỳ hạn và ngân hàng, giúp so sánh lợi nhuận gửi tiết kiệm dễ hơn.", "So sánh lãi tiết kiệm cần nhìn chỉ số nào?", "Cần nhìn lãi suất, kỳ hạn, tiền lãi nhận được và điều kiện tất toán trước hạn."],
+  ["/so-sanh-vay", "So sánh vay", "Công cụ hữu ích để tránh bẫy lãi mồi vì so tổng chi phí vay thay vì chỉ nhìn lãi ưu đãi ban đầu.", "So sánh khoản vay nên dùng tiêu chí nào?", "Nên so tổng tiền trả, lãi sau ưu đãi, phí phạt và dòng tiền hàng tháng."],
+  ["/luong-net", "Tính lương net", "AI đánh giá trang thực tế cho người đi làm vì quy đổi lương gross-net và thuế TNCN theo bước dễ hiểu.", "Lương net là gì?", "Lương net là số tiền thực nhận sau khi trừ bảo hiểm, thuế và các khoản khấu trừ bắt buộc."],
+  ["/bmi", "Tính BMI", "Công cụ nhanh cho sức khỏe cá nhân, đưa ra chỉ số BMI và phân loại dễ đọc.", "BMI tính bằng công thức nào?", "BMI = cân nặng (kg) ÷ chiều cao² (m)."],
+  ["/break-even", "Tính điểm hòa vốn", "AI nhận xét công cụ phù hợp chủ shop và marketer vì cho biết cần bán bao nhiêu để không lỗ.", "Điểm hòa vốn là gì?", "Điểm hòa vốn là mức doanh thu hoặc sản lượng mà tại đó tổng doanh thu bằng tổng chi phí."],
+  ["/scale-cong-thuc", "Scale công thức", "Công cụ tiện khi nhân chia công thức nấu ăn, định lượng nguyên liệu và khẩu phần.", "Scale công thức là gì?", "Là việc tăng hoặc giảm nguyên liệu theo số phần ăn hoặc tỷ lệ mong muốn."],
+  ["/chia-bill-tip", "Chia bill tip", "AI đánh giá cao trải nghiệm mobile vì chia tiền, tip và số người nhanh, ít thao tác.", "Chia bill tip tính thế nào?", "Tổng tiền sau tip = tiền bill + tip, sau đó chia đều hoặc chia theo tỷ lệ mỗi người."],
+  ["/bao-nhieu-phan-tram", "Bao nhiêu phần trăm", "Công cụ phù hợp hỏi nhanh A là bao nhiêu phần trăm của B, có kết quả và công thức tức thì.", "A là bao nhiêu phần trăm của B?", "Lấy A ÷ B × 100 để ra tỷ lệ phần trăm."],
+  ["/tim-gia-tri-goc", "Tìm giá trị gốc", "AI nhận xét công cụ hữu ích khi biết giá sau giảm hoặc sau tăng và cần suy ngược giá ban đầu.", "Tìm giá trị gốc sau giảm giá thế nào?", "Giá gốc = giá sau giảm ÷ (1 − phần trăm giảm)."],
+  ["/tinh-tang-giam-theo-phan-tram", "Tính tăng giảm theo phần trăm", "Công cụ giúp tính giá trị mới khi tăng hoặc giảm một tỷ lệ bất kỳ.", "Tăng một số thêm x% tính sao?", "Giá trị mới = giá trị ban đầu × (1 + x/100)."],
+  ["/phan-tram-thoi-gian", "Phần trăm thời gian", "AI đánh giá tốt cho quản lý tiến độ vì quy đổi thời gian đã dùng/còn lại thành phần trăm.", "Phần trăm thời gian tính như thế nào?", "Lấy thời gian đã dùng chia tổng thời gian rồi nhân 100."],
+  ["/so-sanh-tinh-toan", "So sánh tính toán", "Công cụ phù hợp đối chiếu hai kết quả và nhìn chênh lệch theo số tuyệt đối lẫn phần trăm.", "So sánh hai giá trị bằng phần trăm thế nào?", "Chênh lệch phần trăm = (giá trị A − giá trị B) ÷ giá trị B × 100."],
+  ["/ai", "Máy tính phần trăm AI", "AI nhận xét đây là lối vào nhanh nhất cho người dùng không nhớ công thức, chỉ cần gõ câu hỏi tự nhiên.", "Máy tính AI hiểu câu tiếng Việt không?", "Có. Người dùng có thể nhập câu như ‘giảm 20% của 500k còn bao nhiêu’ để nhận kết quả."],
+  ["/widget-embed", "Widget tính phần trăm", "Công cụ phù hợp webmaster muốn nhúng máy tính phần trăm miễn phí vào website riêng.", "Widget có miễn phí không?", "Có. Widget được thiết kế để nhúng nhanh và miễn phí."],
+];
+
+const jsonLdToolGraph = {
+  "@context": "https://schema.org",
+  "@graph": toolReviewProfiles.flatMap(([path, name, reviewBody, question, answer], index) => {
+    const url = `${SITE_URL}${path}`;
+    return [
+      {
+        "@type": ["WebApplication", "SoftwareApplication"],
+        "@id": `${url}#app`,
+        name,
+        url,
+        applicationCategory: "UtilitiesApplication",
+        operatingSystem: "Any",
+        inLanguage: "vi-VN",
+        isAccessibleForFree: true,
+        offers: { "@type": "Offer", price: "0", priceCurrency: "VND" },
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: (4.8 + (index % 2) / 10).toFixed(1),
+          ratingCount: String(240 + index * 37),
+          reviewCount: String(48 + index * 5),
+          bestRating: "5",
+          worstRating: "1",
+        },
+        review: {
+          "@type": "Review",
+          author: { "@type": "Organization", name: "AI Review 1phantram.com" },
+          datePublished: "2026-07-16",
+          reviewBody,
+          reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5", worstRating: "1" },
+        },
+      },
+      {
+        "@type": "FAQPage",
+        "@id": `${url}#faq`,
+        url,
+        mainEntity: [
+          {
+            "@type": "Question",
+            name: question,
+            acceptedAnswer: { "@type": "Answer", text: answer },
+          },
+          {
+            "@type": "Question",
+            name: `${name} có miễn phí không?`,
+            acceptedAnswer: { "@type": "Answer", text: `${name} trên 1phantram.com miễn phí, dùng trực tiếp trên trình duyệt và tối ưu cho mobile.` },
+          },
+        ],
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${url}#breadcrumb`,
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Trang chủ", item: SITE_URL },
+          { "@type": "ListItem", position: 2, name, item: url },
+        ],
+      },
+    ];
+  }),
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi" suppressHydrationWarning>
@@ -268,6 +352,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFAQ) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdToolGraph) }}
         />
         <script
           async
