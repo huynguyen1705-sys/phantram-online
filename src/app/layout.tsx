@@ -10,7 +10,7 @@ export const viewport: Viewport = {
 
 const SITE_URL = "https://1phantram.com";
 const OG_IMAGE = `${SITE_URL}/og-image.jpg`;
-const GA_ID = "G-G2DJ5FC3FB";
+const GA_ID = "G-MZZHFQYJG1";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
