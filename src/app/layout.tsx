@@ -278,7 +278,22 @@ const jsonLdToolGraph = {
         operatingSystem: "Any",
         inLanguage: "vi-VN",
         isAccessibleForFree: true,
-        offers: { "@type": "Offer", price: "0", priceCurrency: "VND" },
+        offers: {
+          "@type": "Offer",
+          name: `${name} miễn phí`,
+          category: "Free",
+          price: "0",
+          priceCurrency: "VND",
+          availability: "https://schema.org/InStock",
+          url,
+          priceValidUntil: "2027-12-31",
+          priceSpecification: {
+            "@type": "PriceSpecification",
+            price: "0",
+            priceCurrency: "VND",
+            valueAddedTaxIncluded: true,
+          },
+        },
         aggregateRating: {
           "@type": "AggregateRating",
           ratingValue: (4.8 + (index % 2) / 10).toFixed(1),
@@ -324,6 +339,25 @@ const jsonLdToolGraph = {
   }),
 };
 
+const jsonLdFreeOfferCatalog = {
+  "@context": "https://schema.org",
+  "@type": "OfferCatalog",
+  "@id": `${SITE_URL}/#free-tools`,
+  name: "Bảng giá công cụ 1phantram.com",
+  description: "Toàn bộ công cụ tính phần trăm, tài chính, mua sắm và sức khỏe trên 1phantram.com đều miễn phí.",
+  url: SITE_URL,
+  itemListElement: toolReviewProfiles.map(([path, name], index) => ({
+    "@type": "Offer",
+    position: index + 1,
+    name: `${name} miễn phí`,
+    itemOffered: { "@type": "SoftwareApplication", name, url: `${SITE_URL}${path}` },
+    price: "0",
+    priceCurrency: "VND",
+    availability: "https://schema.org/InStock",
+    category: "Free",
+  })),
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi" suppressHydrationWarning>
@@ -356,6 +390,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdToolGraph) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFreeOfferCatalog) }}
         />
         <script
           async
