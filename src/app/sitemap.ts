@@ -2,39 +2,8 @@ import type { MetadataRoute } from "next";
 
 const BASE = "https://1phantram.com";
 const BLOG = "https://1phantram.com/blog";
+const WP_API = "https://blog.phantram.online/wp-json/wp/v2";
 
-// 28 bài đã có trên blog WordPress
-const BLOG_SLUGS = [
-  // Cluster 1: Phần trăm cơ bản
-  "tinh-phan-tram",
-  "kinh-nghiem-tinh-phan-tram",
-  "cong-thuc-tinh-phan-tram",
-  "cach-tinh-phan-tram-tang-giam",
-  "tinh-phan-tram-giam-gia",
-  "tinh-lai-suat-ngan-hang",
-  "tinh-phan-tram-diem-thi",
-  "tinh-phan-tram-tren-may-tinh",
-  "bai-tap-tinh-phan-tram-co-loi-giai",
-  "lai-kep-la-gi",
-  // Cluster 2: Thống kê
-  "thong-ke-co-ban",
-  "trung-binh-cong-la-gi",
-  "trung-vi-median-la-gi",
-  "mode-yeu-vi-la-gi",
-  "phuong-sai-do-lech-chuan",
-  "tan-suat-bang-tan-so",
-  "ti-le-phan-tram-trong-thong-ke",
-  // Cluster 3: Tài chính cá nhân
-  "quan-ly-tai-chinh-ca-nhan",
-  "quy-tac-50-30-20",
-  "lai-kep-la-gi-tai-chinh",
-  "roi-la-gi-cach-tinh",
-  "cagr-la-gi",
-  "quy-tac-72",
-  "phan-tram-trong-tai-chinh",
-];
-
-// 18 standalone tool URLs (incl. AI Parser + widget-embed landing)
 const TOOL_SLUGS = [
   "ai",
   "widget-embed",
@@ -59,15 +28,27 @@ const TOOL_SLUGS = [
   "so-sanh-tinh-toan",
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+async function fetchBlogSlugs(): Promise<string[]> {
+  try {
+    const res = await fetch(
+      `${WP_API}/posts?per_page=100&status=publish&orderby=modified&order=desc&_fields=slug`,
+      { next: { revalidate: 21600 } }
+    );
+    if (!res.ok) return [];
+    const posts = (await res.json()) as { slug: string }[];
+    return posts.map((p) => p.slug).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
+  const blogSlugs = await fetchBlogSlugs();
   const main: MetadataRoute.Sitemap = [
-    {
-      url: BASE,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 1.0,
-    },
+    { url: BASE, lastModified: now, changeFrequency: "daily", priority: 1.0 },
+    { url: `${BLOG}/`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
+    { url: `${BLOG}/category/tinh-huong/`, lastModified: now, changeFrequency: "daily", priority: 0.85 },
   ];
   const HIGH_PRIORITY_WEEKLY = new Set(["so-sanh-vay", "so-sanh-tiet-kiem"]);
   const tools: MetadataRoute.Sitemap = TOOL_SLUGS.map((slug) => ({
@@ -76,10 +57,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: slug === "phan-tram-thoi-gian" ? "daily" : "weekly",
     priority: HIGH_PRIORITY_WEEKLY.has(slug) ? 0.8 : 0.9,
   }));
-  const blog: MetadataRoute.Sitemap = BLOG_SLUGS.map((slug) => ({
+  const blog: MetadataRoute.Sitemap = blogSlugs.map((slug) => ({
     url: `${BLOG}/${slug}/`,
     lastModified: now,
-    changeFrequency: "monthly",
+    changeFrequency: "weekly",
     priority: 0.8,
   }));
   return [...main, ...tools, ...blog];

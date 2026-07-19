@@ -3106,6 +3106,14 @@ function CalculatorInner({ initialTab, singleTab = false, breadcrumb, embed = fa
           </div>
           <div className="flex items-center gap-2">
             <a
+              href="https://1phantram.com/blog/category/tinh-huong/"
+              className="hidden sm:flex items-center gap-1 rounded-xl px-3 h-9 text-sm font-semibold transition-all active:scale-95 hover:opacity-80"
+              style={{ background: "#7c3aed", color: "#fff" }}
+            >
+              <span>🧭</span>
+              <span>Tình huống</span>
+            </a>
+            <a
               href="https://1phantram.com/blog/"
               className="flex items-center gap-1 rounded-xl px-3 h-9 text-sm font-semibold transition-all active:scale-95 hover:opacity-80"
               style={{ background: "var(--primary)", color: "#fff" }}
