@@ -32,20 +32,16 @@ export default function HomeSEOContent() {
 
   return (
     <article className="seo-content max-w-5xl mx-auto px-4 py-8" aria-label="Nội dung giới thiệu 1phantram.com">
-      <h1>Máy Tính Phần Trăm Online — Nhanh, Miễn Phí, Tối Ưu Mobile</h1>
+      <h2 id="huong-dan-nhanh">Hướng dẫn nhanh</h2>
       <p>
-        <strong>1phantram.com</strong> là bộ <strong>17 công cụ tính phần trăm chuyên biệt</strong> dành riêng cho
-        người Việt: từ tính % cơ bản, % tăng giảm, giảm giá, lãi suất ngân hàng đến lương net sau thuế TNCN 2026.
-        Toàn bộ 100% <strong>miễn phí</strong>, <strong>không quảng cáo</strong>, tính toán client-side ngay trên
-        trình duyệt nên tốc độ phản hồi gần như tức thì. Trang được tối ưu mobile-first, có lưu lịch sử, share kết
-        quả qua link/QR, hỗ trợ <Link href="/ai">AI parser hiểu tiếng Việt</Link> tự nhiên và{" "}
-        <Link href="/widget-embed">widget embed iframe</Link> để bạn nhúng vào website cá nhân.
+        <strong>1phantram.com</strong> là bộ công cụ tính phần trăm online miễn phí cho người Việt. Trang ưu tiên máy tính ở đầu màn hình,
+        kết quả realtime, không popup quảng cáo và dùng được tốt trên điện thoại. Bạn có thể tính % cơ bản, tăng giảm %, giảm giá, lãi suất,
+        VAT/phí, điểm thi, lương hoặc tìm giá trị gốc chỉ trong vài thao tác.
       </p>
 
-      <h2 id="cong-cu">17 Công Cụ Tính Phần Trăm Chuyên Biệt</h2>
+      <h2 id="cong-cu">Chọn đúng công cụ tính phần trăm</h2>
       <p>
-        Mỗi công cụ là một trang riêng với metadata, ví dụ và FAQ đầy đủ, giúp bạn truy cập đúng phép tính cần thiết
-        chỉ trong một cú click. Danh sách được gom theo 6 nhóm:
+        Mỗi công cụ có URL riêng, ví dụ rõ ràng và FAQ ngắn để Google/AI hiểu đúng ý định tìm kiếm. Danh sách được gom theo nhu cầu:
       </p>
       <ul>
         {grouped.map(({ group, items }) => (
@@ -65,7 +61,7 @@ export default function HomeSEOContent() {
         nhau và xem chênh lệch tức thì — cực kỳ tiện khi cân nhắc 2 phương án vay, 2 deal sale hoặc 2 mức lương.
       </p>
 
-      <h2 id="moi">🆕 5 Tính Năng Mới Tháng 6/2026</h2>
+      <h2 id="moi">Tính năng nổi bật</h2>
       <p>
         Tháng 6/2026, 1phantram.com phát hành 5 tính năng lớn để phục vụ nhu cầu thực tế của người dùng Việt:
       </p>

@@ -4,6 +4,7 @@ import HomeSEOContent from "@/components/HomeSEOContent";
 import LatestBlogPosts from "@/components/LatestBlogPosts";
 import BlogIndexFull from "@/components/BlogIndexFull";
 import RichSnippetBlocks from "@/components/RichSnippetBlocks";
+import { FAQ_HOME } from "@/lib/home-seo";
 
 const SITE_URL = "https://1phantram.com";
 
@@ -54,16 +55,21 @@ const jsonLd = {
       about: "So sánh các công cụ tính phần trăm, giảm giá, lãi suất, lãi vay và lương net",
     },
     {
-      "@type": "SoftwareApplication",
-      name: "1phantram.com",
+      "@type": ["WebApplication", "SoftwareApplication"],
+      "@id": `${SITE_URL}/#percentage-calculator`,
+      name: "Tính phần trăm online",
+      alternateName: ["Máy tính phần trăm", "Tính phầm trăm"],
       url: SITE_URL,
-      applicationCategory: "FinanceApplication",
+      applicationCategory: "UtilitiesApplication",
       operatingSystem: "Web",
       inLanguage: "vi-VN",
+      isAccessibleForFree: true,
+      featureList: ["Tính % của một giá trị", "A là bao nhiêu % của B", "Tính % tăng giảm", "Tăng/giảm theo %", "Tìm giá trị gốc"],
       offers: {
         "@type": "Offer",
         price: "0",
         priceCurrency: "VND",
+        availability: "https://schema.org/InStock",
       },
       aggregateRating: {
         "@type": "AggregateRating",
@@ -72,6 +78,15 @@ const jsonLd = {
         bestRating: "5",
         worstRating: "1",
       },
+    },
+    {
+      "@type": "FAQPage",
+      "@id": `${SITE_URL}/#faq-home`,
+      mainEntity: FAQ_HOME.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
     },
   ],
 };

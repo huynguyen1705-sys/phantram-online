@@ -67,7 +67,7 @@ const CLUSTERS: Cluster[] = [
 ];
 
 const BLOG_DOMAIN = "https://1phantram.com/blog";
-const WP_API = "https://blog.phantram.online/wp-json/wp/v2";
+const WP_API = "https://1phantram.com/blog/wp-json/wp/v2";
 
 function stripHtml(html: string) {
   return html.replace(/<[^>]+>/g, "").replace(/&[^;]+;/g, " ").trim();

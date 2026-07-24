@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FAQ_HOME } from "@/lib/home-seo";
 
 const TOOLS = [
   { href: "/tinh-phan-tram", name: "Tính % của một giá trị", desc: "Tính nhanh A% của B, ví dụ 30% của 200.000đ." },
@@ -20,12 +21,6 @@ const SITELINKS = [
   { href: "/widget-embed", label: "Widget embed" },
 ];
 
-const FAQ = [
-  ["Tính phần trăm nhanh nhất bằng công thức nào?", "Dùng công thức giá trị × phần trăm ÷ 100. Ví dụ 30% của 200.000đ = 60.000đ."],
-  ["Google có thể hiện FAQ và sitelinks của 1phantram.com không?", "Trang đã có FAQPage, WebSite SearchAction, ItemList, WebApplication, BreadcrumbList và các link điều hướng rõ ràng để tăng cơ hội rich results."],
-  ["Nên dùng công cụ nào khi mua sắm?", "Dùng Tính giảm giá để ra giá sau sale, Soi sale để kiểm tra sale ảo và So sánh giá để chọn cửa hàng rẻ hơn."],
-  ["Có thể tìm bài blog từ main web không?", "Có. Ô tìm kiếm bên dưới trỏ thẳng sang 1phantram.com/blog và toàn bộ link blog được render sẵn để Googlebot đọc được."],
-];
 
 export default function RichSnippetBlocks() {
   return (
@@ -81,10 +76,10 @@ export default function RichSnippetBlocks() {
 
       <h2 id="faq-rich" className="text-xl font-bold mb-3" style={{ color: "var(--text)" }}>FAQ ngắn cho featured snippet</h2>
       <div className="space-y-3">
-        {FAQ.map(([q, a]) => (
-          <details key={q} className="rounded-xl border p-4" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
-            <summary className="font-semibold cursor-pointer" style={{ color: "var(--text)" }}>{q}</summary>
-            <p className="mt-2 text-sm" style={{ color: "var(--text-muted)" }}>{a}</p>
+        {FAQ_HOME.map((item) => (
+          <details key={item.q} className="rounded-xl border p-4" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
+            <summary className="font-semibold cursor-pointer" style={{ color: "var(--text)" }}>{item.q}</summary>
+            <p className="mt-2 text-sm" style={{ color: "var(--text-muted)" }}>{item.a}</p>
           </details>
         ))}
       </div>

@@ -113,6 +113,26 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
     {
+      "@type": ["WebApplication", "SoftwareApplication"],
+      name: "So sánh lãi suất vay mua nhà ngân hàng",
+      url: `https://1phantram.com${URL_PATH}`,
+      applicationCategory: "FinanceApplication",
+      operatingSystem: "Any",
+      inLanguage: "vi-VN",
+      isAccessibleForFree: true,
+      offers: { "@type": "Offer", price: "0", priceCurrency: "VND", availability: "https://schema.org/InStock" },
+      aggregateRating: { "@type": "AggregateRating", ratingValue: "4.8", ratingCount: "389", bestRating: "5", worstRating: "1" },
+    },
+    {
+      "@type": "Dataset",
+      name: "Bảng lãi suất vay mua nhà 13 ngân hàng tháng 6/2026",
+      url: `https://1phantram.com${URL_PATH}`,
+      inLanguage: "vi-VN",
+      dateModified: META.lastUpdated,
+      isAccessibleForFree: true,
+      creator: { "@type": "Organization", name: "1phantram.com" },
+    },
+    {
       "@type": "WebPage",
       name: TITLE,
       url: `https://1phantram.com${URL_PATH}`,

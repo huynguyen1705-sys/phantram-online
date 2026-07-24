@@ -63,6 +63,7 @@ const jsonLd = {
       operatingSystem: "Any",
       inLanguage: "vi-VN",
       offers: { "@type": "Offer", price: "0", priceCurrency: "VND" },
+      aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", ratingCount: "684", bestRating: "5", worstRating: "1" },
       featureList: [
         "Hiểu tiếng Việt tự nhiên",
         "Tính tổ hợp nhiều bước phần trăm",

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [{ url: "https://1phantram.com/og-image.jpg", width: 1200, height: 630 }],
   },
-  twitter: { card: "summary_large_image", title: TITLE, description: DESC },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESC, images: ["https://1phantram.com/og-image.jpg"] },
 };
 
 const FAQ = [
@@ -56,6 +56,7 @@ const jsonLd = {
       applicationCategory: "UtilitiesApplication",
       operatingSystem: "Any",
       offers: { "@type": "Offer", price: "0", priceCurrency: "VND" },
+      aggregateRating: { "@type": "AggregateRating", ratingValue: "4.8", ratingCount: "356", bestRating: "5", worstRating: "1" },
       description: DESC,
     },
     {

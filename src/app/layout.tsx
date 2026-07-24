@@ -15,13 +15,14 @@ const GA_ID = "G-MZZHFQYJG1";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Tính Phần Trăm Online - Máy Tính % Miễn Phí | 1phantram.com",
+    default: "Tính phần trăm online - Máy tính % miễn phí | 1phantram.com",
     template: "%s | 1phantram.com",
   },
   description:
-    "Công cụ tính phần trăm online miễn phí, nhanh nhất Việt Nam. Tính % của giá trị, % tăng giảm, giảm giá, lãi suất ngân hàng, ROI, lãi kép. Tối ưu mobile.",
+    "Tính phần trăm online miễn phí, nhanh trên mobile: % của giá trị, tăng giảm %, giảm giá, lãi suất, VAT, lương. Có xử lý cách gõ sai thường gặp như tính phầm trăm.",
   keywords: [
     "tính phần trăm",
+    "tính phầm trăm",
     "máy tính phần trăm",
     "tính % online",
     "công cụ tính phần trăm",
@@ -50,8 +51,8 @@ export const metadata: Metadata = {
     canonical: SITE_URL,
   },
   openGraph: {
-    title: "Tính Phần Trăm Online - Máy Tính % Miễn Phí",
-    description: "Công cụ tính phần trăm online miễn phí, nhanh nhất Việt Nam. Tối ưu cho mobile.",
+    title: "Tính phần trăm online - Máy tính % miễn phí",
+    description: "Máy tính phần trăm online miễn phí, phản hồi realtime, tối ưu mobile.",
     url: SITE_URL,
     siteName: "1phantram.com",
     locale: "vi_VN",
@@ -67,8 +68,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tính Phần Trăm Online - Máy Tính % Miễn Phí",
-    description: "Công cụ tính phần trăm online miễn phí, nhanh nhất Việt Nam.",
+    title: "Tính phần trăm online - Máy tính % miễn phí",
+    description: "Công cụ tính phần trăm online miễn phí, nhanh trên điện thoại.",
     images: [OG_IMAGE],
   },
   robots: {
@@ -301,13 +302,6 @@ const jsonLdToolGraph = {
           reviewCount: String(48 + index * 5),
           bestRating: "5",
           worstRating: "1",
-        },
-        review: {
-          "@type": "Review",
-          author: { "@type": "Organization", name: "AI Review 1phantram.com" },
-          datePublished: "2026-07-16",
-          reviewBody,
-          reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5", worstRating: "1" },
         },
       },
       {

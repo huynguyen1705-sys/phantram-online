@@ -1,9 +1,9 @@
-# phantram.online — Project Notes
+# 1phantram.com — Project Notes
 
 _Created: 2026-06-05_
 
 ## Telegram Group
-- Group: "Web phantram.online"
+- Group: "Web 1phantram.com"
 - Chat ID: telegram:-4873664850
 - Owner: Huy N (@huy1705)
 

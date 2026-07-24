@@ -6,9 +6,9 @@ export default function IntroSEO() {
         className="rounded-2xl border p-5 prose-content"
         style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }}
       >
-        <h1 className="text-xl font-bold mb-3 leading-tight">
-          Tính Phần Trăm Online - Máy Tính % Miễn Phí Nhanh Nhất
-        </h1>
+        <h2 className="text-xl font-bold mb-3 leading-tight">
+          Tính phần trăm online miễn phí, nhanh trên mobile
+        </h2>
 
         <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--text)" }}>
           <strong>1phantram.com</strong> là công cụ <strong>tính phần trăm</strong> online miễn phí,

@@ -21,8 +21,8 @@ export const metadata: Metadata = {
     "hôm nay là ngày bao nhiêu",
   ],
   alternates: { canonical: `https://1phantram.com${URL_PATH}` },
-  openGraph: { title: TITLE, description: DESC, url: `https://1phantram.com${URL_PATH}`, siteName: "1phantram.com", locale: "vi_VN", type: "website" },
-  twitter: { card: "summary_large_image", title: TITLE, description: DESC },
+  openGraph: { title: TITLE, description: DESC, url: `https://1phantram.com${URL_PATH}`, siteName: "1phantram.com", images: [{ url: `${URL_PATH}/opengraph-image`, width: 1200, height: 630 }], locale: "vi_VN", type: "website" },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESC, images: [`${URL_PATH}/opengraph-image`] },
 };
 
 const FAQ = [

@@ -37,6 +37,49 @@ function ShareButton({ onClick }: { onClick: () => void }) {
   );
 }
 
+const CORE_TAB_IDS: TabId[] = ["percent-of", "what-percent", "change", "increase-decrease", "find-base"];
+
+function HomeHero({ activeTab, setActiveTab }: { activeTab: TabId; setActiveTab: (tab: TabId) => void }) {
+  return (
+    <section className="max-w-7xl mx-auto px-4 lg:px-6 pt-5 lg:pt-8" aria-label="Máy tính phần trăm chính">
+      <div className="rounded-3xl border p-5 lg:p-7 shadow-sm" style={{ background: "linear-gradient(135deg, var(--card) 0%, var(--bg) 100%)", borderColor: "var(--border)" }}>
+        <div className="grid gap-5 lg:grid-cols-[1fr,1.1fr] lg:items-center">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] mb-2" style={{ color: "var(--primary)" }}>Máy tính % realtime</p>
+            <h1 className="text-3xl lg:text-5xl font-extrabold leading-tight" style={{ color: "var(--text)" }}>Tính phần trăm online</h1>
+            <p className="mt-3 text-base lg:text-lg leading-relaxed" style={{ color: "var(--text-muted)" }}>
+              Nhập số là có kết quả ngay. Dùng cho giảm giá, tăng giảm, lãi suất, VAT, điểm thi, lương và các phép tính phần trăm hằng ngày.
+            </p>
+            <div className="mt-4 rounded-2xl border p-4" style={{ background: "var(--result-bg)", borderColor: "var(--border)" }}>
+              <p className="text-sm font-bold mb-1" style={{ color: "var(--result-text)" }}>Trả lời nhanh</p>
+              <p className="text-sm leading-relaxed" style={{ color: "var(--text)" }}>
+                Công thức phổ biến nhất: <strong>giá trị × phần trăm ÷ 100</strong>. Ví dụ 20% của 80 = 16. Nếu gõ nhầm “tính phầm trăm”, công cụ vẫn dành cho đúng nhu cầu tính phần trăm.
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+            {CORE_TAB_IDS.map((id) => {
+              const tab = TABS.find((t) => t.id === id)!;
+              const active = activeTab === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setActiveTab(id)}
+                  className={`rounded-2xl border px-3 py-3 text-left sm:text-center transition-all active:scale-95 ${active ? "tab-active" : ""}`}
+                  style={active ? {} : { background: "var(--card)", borderColor: "var(--border)", color: "var(--text)" }}
+                >
+                  <span className="block text-xl mb-1">{tab.icon}</span>
+                  <span className="block text-xs font-bold leading-tight">{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export type { TabId } from "@/lib/tabs";
 export { TAB_URL_MAP, TABS, TAB_GROUPS, TAB_DESCRIPTIONS } from "@/lib/tabs";
 
@@ -3144,6 +3187,8 @@ function CalculatorInner({ initialTab, singleTab = false, breadcrumb, embed = fa
         </div>
       )}
 
+      {!singleTab && <HomeHero activeTab={activeTab} setActiveTab={setActiveTab} />}
+
       {/* ═══ MOBILE + TABLET LAYOUT ═══ */}
       <div className="lg:hidden">
         {!singleTab && (
@@ -3167,7 +3212,7 @@ function CalculatorInner({ initialTab, singleTab = false, breadcrumb, embed = fa
           </>
         )}
 
-        <main className="px-4 pb-8 pt-3">
+        <main className="px-4 pb-8 pt-3" aria-label={singleTab ? undefined : "Công cụ tính phần trăm online"}>
           <div className="max-w-lg md:max-w-2xl mx-auto rounded-2xl p-5 shadow-sm border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
             {renderActiveTab()}
           </div>

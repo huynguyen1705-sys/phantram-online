@@ -15,7 +15,7 @@ type WPPost = {
   date: string;
 };
 
-const WP_API = "https://blog.phantram.online/wp-json/wp/v2";
+const WP_API = "https://1phantram.com/blog/wp-json/wp/v2";
 
 // Map category WP → nhóm hiển thị
 const CATEGORY_GROUPS: { ids: number[]; label: string; icon: string; color: string; href?: string }[] = [

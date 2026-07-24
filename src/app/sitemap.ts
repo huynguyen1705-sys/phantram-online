@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 const BASE = "https://1phantram.com";
 const BLOG = "https://1phantram.com/blog";
-const WP_API = "https://blog.phantram.online/wp-json/wp/v2";
+const WP_API = "https://1phantram.com/blog/wp-json/wp/v2";
 
 const TOOL_SLUGS = [
   "ai",

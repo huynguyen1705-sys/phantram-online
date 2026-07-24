@@ -13,7 +13,7 @@ type WPPost = {
 async function fetchLatestPosts(): Promise<WPPost[]> {
   try {
     const res = await fetch(
-      "https://blog.phantram.online/wp-json/wp/v2/posts?per_page=8&_fields=title,slug,link,date,excerpt&orderby=date&order=desc",
+      "https://1phantram.com/blog/wp-json/wp/v2/posts?per_page=8&_fields=title,slug,link,date,excerpt&orderby=date&order=desc",
       { next: { revalidate: 21600 } } // 6h
     );
     if (!res.ok) return [];
